@@ -2,10 +2,10 @@ import axios from 'axios';
 import { getAccessToken, saveAccessToken } from '../utils/token';
 import { forcedLogout } from '../utils/auth';
 import { refreshToken } from './authService';
-import { toast } from 'react-toastify'
+import { toast } from 'sonner';
 
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:5000/api',
   timeout: 15000,
   withCredentials: false, // KHÔNG gửi cookie mặc định
 });

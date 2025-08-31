@@ -48,12 +48,11 @@ export function CompanyManagement() {
       if (searchTerm) queryParams.search = searchTerm;
 
       const response = await getAllCompaniesForAdmin(queryParams);
-      toast.success('Đã tải danh sách công ty thành công');
-      setCompanies(response.data.data || []);
-      setMeta(response.data.meta || meta);
+      setCompanies(response.data || []);
+      setMeta(response.meta || meta);
     } catch (error) {
-      setError(error.message || 'Không thể tải danh sách công ty');
-      toast.error(error.message || 'Không thể tải danh sách công ty');
+      setError(error.response?.data?.message || 'Không thể tải danh sách công ty');
+      toast.error(error.response?.data?.message || 'Không thể tải danh sách công ty');
     } finally {
       setLoading(false);
     }

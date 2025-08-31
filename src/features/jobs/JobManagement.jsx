@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { getAllJobsForAdmin, updateJobStatus } from '@/services/jobService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
+import JobDetailModal from '@/components/jobs/JobDetailModal';
 import { 
   Search, 
   Briefcase, 
@@ -27,6 +28,8 @@ export function JobManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [meta, setMeta] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -51,8 +54,8 @@ export function JobManagement() {
       if (typeFilter !== 'all') queryParams.type = typeFilter;
 
       const response = await getAllJobsForAdmin(queryParams);
-      setJobs(response.data.data || []);
-      setMeta(response.data.meta || meta);
+      setJobs(response.data || []);
+      setMeta(response.meta || meta);
     } catch (error) {
       setError(error.message || 'Không thể tải danh sách công việc');
       toast.error(error.message || 'Không thể tải danh sách công việc');
@@ -98,6 +101,16 @@ export function JobManagement() {
       setLoading(false);
     }
   }, []);
+
+  const handleViewJob = (jobId) => {
+    setSelectedJobId(jobId);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedJobId(null);
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -230,7 +243,11 @@ export function JobManagement() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewJob(job._id)}
+                        >
                           <Eye className="w-4 h-4 mr-1" />
                           Xem
                         </Button>
@@ -282,6 +299,13 @@ export function JobManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Job Detail Modal */}
+      <JobDetailModal
+        jobId={selectedJobId}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+      />
     </div>
   );
 }

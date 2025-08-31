@@ -30,9 +30,10 @@ export function Sidebar({ className }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
-  const handleLogout = useCallback(() => {
-    dispatch(logoutUser());
-  }, [dispatch]);
+  const handleLogout = useCallback(async () => {
+    await dispatch(logoutUser());
+    navigate('/login');
+  }, [dispatch, navigate]);
 
   const handleNavigation = useCallback((path) => {
     navigate(path);

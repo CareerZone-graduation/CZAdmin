@@ -8,8 +8,8 @@ export const logoutServer = () =>
   apiClient.post('/auth/logout', null, { withCredentials: true });
 
 /**
- * Login with username and password
- * @param {{ username: string, password: string }} credentials 
+ * Login with email and password
+ * @param {{ email: string, password: string }} credentials 
  * @returns {Promise<import('axios').AxiosResponse<{
  *   success: boolean,
  *   message: string,
@@ -18,6 +18,7 @@ export const logoutServer = () =>
  *     email: string,
  *     role: string,
  *     active: boolean,
+ *     isEmailVerified: boolean,
  *     accessToken: string
  *   }
  * }>>}
@@ -51,3 +52,18 @@ export const getMe = (axiosConfig = {}) =>
  * @returns {Promise<import('axios').AxiosResponse>}
  */
 export const register = (userData) => apiClient.post('/auth/register', userData);
+
+// Logout user by calling the logout API endpoint.
+// The following curl command is used as reference:
+// curl --location --request POST 'localhost:5000/api/auth/logout' \
+// --header 'Authorization: Bearer <token>' \
+// --header 'Cookie: refreshToken=<token>' \
+// --data ''
+export const logout = async () => {
+  try {
+    const response = await apiClient.post('/auth/logout');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -38,3 +38,8 @@ export const getAllJobsForAdmin = async (params = {}) => {
 export const updateJobStatus = async (jobId, status) => {
   return await apiClient.patch(`/admin/jobs/${jobId}/status`, { status }, { showToast: true })
 }
+
+// Lấy chi tiết job cho admin
+export const getJobDetailForAdmin = async (jobId) => {
+  return await apiClient.get(`/admin/jobs/${jobId}`)
+}

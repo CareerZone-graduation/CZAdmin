@@ -1,10 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { login, logoutServer, getMe } from '../../services/authService';
+import { saveAccessToken, clearAccessToken, getAccessToken } from '../../utils/token';
 
 const initialState = {
   user: null,
   isAuthenticated: false,
   loading: false,
   error: null,
+  initializing: true, // Thêm trạng thái khởi tạo
 };
 
 const authSlice = createSlice({
@@ -35,44 +38,86 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    initAuthComplete: (state) => {
+      state.initializing = false;
+    },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, clearError } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, clearError, initAuthComplete } = authSlice.actions;
 
 // Thunk action creators for async operations
 export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Demo credentials check
-    if (credentials.email === 'admin@careerzone.com' && credentials.password === 'admin123') {
+    const response = await login(credentials);
+    if (response.success) {  // Updated to use new response structure
+      // Lưu accessToken vào localStorage
+      saveAccessToken(response.data.accessToken);
+      
       const user = {
-        id: 1,
-        email: credentials.email,
-        name: 'Admin User',
-        role: 'admin',
+        id: response.data.id,
+        email: response.data.email,
+        role: response.data.role,
+        active: response.data.active,
+        isEmailVerified: response.data.isEmailVerified,
       };
       dispatch(loginSuccess(user));
     } else {
-      throw new Error('Invalid credentials');
+      throw new Error(response.message || 'Login failed');
     }
   } catch (error) {
-    dispatch(loginFailure(error.message));
+    const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+    dispatch(loginFailure(errorMessage));
   }
 };
 
-export const logoutUser = () => (dispatch) => {
-  // Clear any stored tokens/session data here
+export const logoutUser = () => async (dispatch) => {
+  try {
+    await logoutServer();
+  } catch (error) {
+    // Optionally handle logout API error
+    console.error('Logout API error:', error);
+  }
+  clearAccessToken();
   dispatch(logout());
 };
 
-export const initAuth = () => (dispatch) => {
-  // Check for existing session/token here
-  // For now, just return - no persistent auth
-  return Promise.resolve();
+export const initAuth = () => async (dispatch) => {
+  const accessToken = getAccessToken();
+  if (!accessToken) {
+    // Không có token, giữ trạng thái chưa đăng nhập
+    dispatch(initAuthComplete());
+    return Promise.resolve();
+  }
+
+  try {
+    // Có token, thử lấy thông tin user
+    const response = await getMe();
+    
+    if (response.success) {
+      // Khôi phục trạng thái đăng nhập
+      const userData = response.data;
+      const user = {
+        id: userData.id,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+        company: userData.company,
+        active: userData.active,
+      };
+      dispatch(loginSuccess(user));
+    } else {
+      // Token không hợp lệ, xóa token
+      clearAccessToken();
+    }
+  } catch (error) {
+    // Token hết hạn hoặc không hợp lệ, xóa token
+    console.error('Init auth error:', error);
+    clearAccessToken();
+  } finally {
+    dispatch(initAuthComplete());
+  }
 };
 
 export default authSlice.reducer;

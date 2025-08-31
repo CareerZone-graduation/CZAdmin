@@ -13,8 +13,8 @@ export function LoginForm({ className }) {
   const { loading, error } = useSelector((state) => state.auth);
   
   const [credentials, setCredentials] = useState({
-    email: '',
-    password: ''
+    email: 'admin@gmail.com',
+    password: 'a'
   });
   const [showPassword, setShowPassword] = useState(false);
 
