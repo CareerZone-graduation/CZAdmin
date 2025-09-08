@@ -1,11 +1,14 @@
 import apiClient from './apiClient';
 
 // refreshToken gửi cookie (withCredentials: true)
-export const refreshToken = () =>
-  apiClient.post('/auth/refresh', null, { withCredentials: true });
+export const refreshToken = () => {
 
-export const logoutServer = () =>
-  apiClient.post('/auth/logout', null, { withCredentials: true });
+  return apiClient.post('/auth/refresh', null, { withCredentials: true });
+};
+
+export const logoutServer = () => {
+  return apiClient.post('/auth/logout', null, { withCredentials: true });
+};
 
 /**
  * Login with email and password
@@ -23,8 +26,9 @@ export const logoutServer = () =>
  *   }
  * }>>}
  */
-export const login = (credentials) =>
-  apiClient.post('/auth/login', credentials, { withCredentials: true });
+export const login = (credentials) => {
+  return apiClient.post('/auth/login', credentials, { withCredentials: true });
+};
 
 
 /**
@@ -43,8 +47,9 @@ export const login = (credentials) =>
  *   }
  * }>>}
  */
-export const getMe = (axiosConfig = {}) =>
-  apiClient.get('/auth/me', { ...axiosConfig, withCredentials: true });
+export const getMe = (axiosConfig = {}) => {
+  return apiClient.get('/auth/me', { ...axiosConfig, withCredentials: true });
+};
 
 /**
  * Register a new user account
@@ -62,7 +67,7 @@ export const register = (userData) => apiClient.post('/auth/register', userData)
 export const logout = async () => {
   try {
     const response = await apiClient.post('/auth/logout');
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw error;
   }

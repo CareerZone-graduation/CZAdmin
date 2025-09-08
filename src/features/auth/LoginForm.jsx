@@ -167,13 +167,8 @@ export function LoginForm({ className }) {
             
             <div className="pt-6 border-t border-gray-200">
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-3">Demo credentials for testing:</p>
-                <div className="bg-gradient-to-r from-gray-50 to-green-50 rounded-xl p-4 text-sm border border-gray-200">
-                  <div className="space-y-1">
-                    <p className="font-medium text-gray-800">📧 admin@careerzone.com</p>
-                    <p className="font-medium text-gray-800">🔐 admin123</p>
-                  </div>
-                </div>
+                <p className="text-sm text-gray-600 mb-3"></p>
+
               </div>
             </div>
           </CardContent>

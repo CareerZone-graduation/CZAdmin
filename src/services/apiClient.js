@@ -37,15 +37,7 @@ function publishRefresh(token) {
 // forcedLogout được import từ utils/auth.js
 
 apiClient.interceptors.response.use(
-  (res) => {
-    // ----- Toast cho request thành công -----
-    const { config, data } = res;
-    // Mặc định là tắt toast
-     if (config.showToast === true && data?.message) {
-      toast.success(data.message);
-    }
-    return data;
-  },
+  (res) => res,
   async (error) => {
     const { response, config } = error;
 

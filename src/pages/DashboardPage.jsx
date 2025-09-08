@@ -1,11 +1,11 @@
 import React from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
-import { Dashboard } from '@/features/dashboard/Dashboard';
+import { EnhancedDashboard } from '@/features/dashboard/EnhancedDashboard';
 
 export function DashboardPage() {
   return (
     <DashboardLayout>
-      <Dashboard />
+      <EnhancedDashboard />
     </DashboardLayout>
   );
 }

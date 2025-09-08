@@ -115,8 +115,8 @@ const response = await getUsers(params);
 3. **Xử lý response**:
 ```javascript
 if (response.success) {
-  const users = response.data;
-  const meta = response.meta;
+  const users = response.data.data;
+  const meta = response.data.meta;
   // Cập nhật state
 }
 ```

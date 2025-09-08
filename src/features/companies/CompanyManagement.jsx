@@ -48,8 +48,8 @@ export function CompanyManagement() {
       if (searchTerm) queryParams.search = searchTerm;
 
       const response = await getAllCompaniesForAdmin(queryParams);
-      setCompanies(response.data || []);
-      setMeta(response.meta || meta);
+      setCompanies(response.data.data || []);
+      setMeta(response.data.meta || meta);
     } catch (error) {
       setError(error.response?.data?.message || 'Không thể tải danh sách công ty');
       toast.error(error.response?.data?.message || 'Không thể tải danh sách công ty');

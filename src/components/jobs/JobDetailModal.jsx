@@ -38,7 +38,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
     setError(null);
     try {
       const response = await getJobDetailForAdmin(jobId);
-      setJob(response.data);
+      setJob(response.data.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Không thể tải chi tiết công việc');
     } finally {
@@ -131,10 +131,58 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
           <DialogHeader>
             <Skeleton className="h-8 w-3/4" />
           </DialogHeader>
-          <div className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div className="space-y-6 animate-pulse">
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="w-16 h-16 rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-1/2" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-1/3" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </DialogContent>
       </Dialog>
@@ -288,6 +336,34 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cập nhật:</span>
                   <span className="font-medium">{formatDate(job.updatedAt)}</span>
+                  {/* Thống kê ứng tuyển */}
+                  {job.analytics?.applicationStats && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Thống kê đơn ứng tuyển</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                          <div className="p-2 rounded-lg bg-blue-50">
+                            <p className="text-2xl font-bold">{job.analytics.applicationStats.total || 0}</p>
+                            <p className="text-sm text-muted-foreground">Tổng cộng</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-yellow-50">
+                            <p className="text-2xl font-bold">{job.analytics.applicationStats.pending || 0}</p>
+                            <p className="text-sm text-muted-foreground">Chờ duyệt</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-purple-50">
+                            <p className="text-2xl font-bold">{job.analytics.applicationStats.scheduled_interview || 0}</p>
+                            <p className="text-sm text-muted-foreground">Đã hẹn</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-green-50">
+                            <p className="text-2xl font-bold">{job.analytics.applicationStats.accepted || 0}</p>
+                            <p className="text-sm text-muted-foreground">Chấp nhận</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </CardContent>
             </Card>

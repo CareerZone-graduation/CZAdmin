@@ -51,20 +51,20 @@ export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
     const response = await login(credentials);
-    if (response.success) {  // Updated to use new response structure
+    if (response.data.success) {  // Updated to use new response structure
       // Lưu accessToken vào localStorage
-      saveAccessToken(response.data.accessToken);
+      saveAccessToken(response.data.data.accessToken);
       
       const user = {
-        id: response.data.id,
-        email: response.data.email,
-        role: response.data.role,
-        active: response.data.active,
-        isEmailVerified: response.data.isEmailVerified,
+        id: response.data.data.id,
+        email: response.data.data.email,
+        role: response.data.data.role,
+        active: response.data.data.active,
+        isEmailVerified: response.data.data.isEmailVerified,
       };
       dispatch(loginSuccess(user));
     } else {
-      throw new Error(response.message || 'Login failed');
+      throw new Error(response.data.data.message || 'Login failed');
     }
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message || 'Login failed';
@@ -94,10 +94,10 @@ export const initAuth = () => async (dispatch) => {
   try {
     // Có token, thử lấy thông tin user
     const response = await getMe();
-    
-    if (response.success) {
+
+    if (response.data.success) {
       // Khôi phục trạng thái đăng nhập
-      const userData = response.data;
+      const userData = response.data.data;
       const user = {
         id: userData.id,
         email: userData.email,

@@ -58,10 +58,10 @@ export function UserManagement() {
 
       const response = await getUsers(params);
       
-      setUsers(response.data || []);
-      setTotalPages(response.meta?.totalPages || 1);
-      setTotalItems(response.meta?.totalItems || 0);
-      setCurrentPage(response.meta?.currentPage || 1);
+      setUsers(response.data.data || []);
+      setTotalPages(response.data?.meta?.totalPages || 1);
+      setTotalItems(response.data?.meta?.totalItems || 0);
+      setCurrentPage(response.data?.meta?.currentPage || 1);
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers([]);

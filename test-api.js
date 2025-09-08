@@ -19,8 +19,8 @@ async function testGetUsers() {
     
     if (response.success) {
       console.log('✅ API call successful');
-      console.log('Users found:', response.data.length);
-      console.log('Total items:', response.meta.totalItems);
+      console.log('Users found:', response.data.data.length);
+      console.log('Total items:', response.data.meta.totalItems);
     } else {
       console.log('❌ API call failed:', response.message);
     }
