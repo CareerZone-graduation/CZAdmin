@@ -326,8 +326,8 @@ export const ActivityOverviewChart = () => {
           getUserGrowth(filters)
         ]);
 
-        const revenueData = revenueRes.data;
-        const usersData = usersRes.data;
+        const revenueData = revenueRes.data.data;
+        const usersData = usersRes.data.data;
 
         // Merge the data based on the date
         const mergedData = revenueData.map(revItem => {
