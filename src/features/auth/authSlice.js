@@ -51,7 +51,12 @@ export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
     const response = await login(credentials);
-    if (response.data.success) {  // Updated to use new response structure
+    if (response.data.success) {
+      // **Role Check**
+      if (response.data.data.role !== 'admin') {
+        throw new Error('Access Denied: You do not have admin privileges.');
+      }
+
       // Lưu accessToken vào localStorage
       saveAccessToken(response.data.data.accessToken);
       
@@ -96,17 +101,24 @@ export const initAuth = () => async (dispatch) => {
     const response = await getMe();
 
     if (response.data.success) {
-      // Khôi phục trạng thái đăng nhập
       const userData = response.data.data;
-      const user = {
-        id: userData.id,
-        email: userData.email,
-        role: userData.role,
-        name: userData.name,
-        company: userData.company,
-        active: userData.active,
-      };
-      dispatch(loginSuccess(user));
+
+      // **Role Check**
+      if (userData.role !== 'admin') {
+        // Token belongs to a non-admin user, treat as invalid
+        clearAccessToken();
+      } else {
+        // Khôi phục trạng thái đăng nhập
+        const user = {
+          id: userData.id,
+          email: userData.email,
+          role: userData.role,
+          name: userData.name,
+          company: userData.company,
+          active: userData.active,
+        };
+        dispatch(loginSuccess(user));
+      }
     } else {
       // Token không hợp lệ, xóa token
       clearAccessToken();
