@@ -257,6 +257,9 @@ export function EnhancedCompanyManagement() {
             {getStatusBadge(company.status, company.verified)}
           </div>
         </DialogTitle>
+        <DialogDescription>
+          Thông tin chi tiết về công ty và người đăng ký
+        </DialogDescription>
       </DialogHeader>
 
       {detailedData ? (

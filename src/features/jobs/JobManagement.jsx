@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 import { getAllJobsForAdmin, updateJobStatus } from '@/services/jobService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
-import { 
-  Search, 
-  Briefcase, 
-  MapPin, 
+import { Pagination } from '@/components/common/Pagination';
+import {
+  Search,
+  Briefcase,
+  MapPin,
   Building2,
   Users,
   Calendar,
@@ -65,6 +66,10 @@ export function JobManagement() {
       setLoading(false);
     }
   }, [searchTerm, statusFilter, companyFilter, sortFilter, meta.currentPage, meta.limit]);
+
+  const handlePageChange = (newPage) => {
+    setMeta(prev => ({ ...prev, currentPage: newPage }));
+  };
 
   // Load jobs on component mount and when filters change
   useEffect(() => {
@@ -266,6 +271,14 @@ export function JobManagement() {
               <p className="text-gray-500">Không tìm thấy công việc nào phù hợp với tiêu chí.</p>
             </div>
           )}
+          <div className="mt-6">
+            <Pagination
+              currentPage={meta.currentPage}
+              totalPages={meta.totalPages}
+              onPageChange={handlePageChange}
+              loading={loading}
+            />
+          </div>
         </CardContent>
       </Card>
 

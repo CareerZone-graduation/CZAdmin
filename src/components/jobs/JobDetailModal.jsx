@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,6 +129,8 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
+            <DialogTitle>Chi tiết công việc</DialogTitle>
+            <DialogDescription>Đang tải thông tin chi tiết về công việc này</DialogDescription>
             <Skeleton className="h-8 w-3/4" />
           </DialogHeader>
           <div className="space-y-6 animate-pulse">
@@ -195,6 +197,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-destructive">Lỗi</DialogTitle>
+            <DialogDescription>Đã xảy ra lỗi khi tải thông tin công việc</DialogDescription>
           </DialogHeader>
           <p className="text-muted-foreground">{error}</p>
           <Button onClick={onClose} className="mt-4">
@@ -212,6 +215,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{job.title}</DialogTitle>
+          <DialogDescription>Thông tin chi tiết về vị trí công việc và yêu cầu tuyển dụng</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">

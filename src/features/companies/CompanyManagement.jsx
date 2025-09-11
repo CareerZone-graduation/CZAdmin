@@ -7,13 +7,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { getAllCompaniesForAdmin, updateCompanyVerification } from '@/services/companyService';
 import { CompanyListSkeleton } from '@/components/common/CompanyListSkeleton';
-import { 
-  Check, 
-  X, 
-  Search, 
-  Building2, 
-  Globe, 
-  Users, 
+import { Pagination } from '@/components/common/Pagination';
+import {
+  Check,
+  X,
+  Search,
+  Building2,
+  Globe,
+  Users,
   Calendar,
   ExternalLink,
   MapPin,
@@ -34,15 +35,14 @@ export function CompanyManagement() {
   });
 
   // Fetch companies from API
-  const fetchCompanies = async (params = {}) => {
+  const fetchCompanies = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
       
       const queryParams = {
-        page: meta.currentPage,
+        page,
         limit: meta.limit,
-        ...params
       };
 
       if (searchTerm) queryParams.search = searchTerm;
@@ -56,18 +56,21 @@ export function CompanyManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, meta.limit]);
 
   // Load companies on component mount and when filters change
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchCompanies(1);
+    }, 500);
 
-  const filteredCompanies = companies.filter(company =>
-    company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.contactInfo?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchCompanies(meta.currentPage);
+  }, [meta.currentPage, fetchCompanies]);
+
 
   const handleVerificationChange = useCallback(async (companyId, verified) => {
     try {
@@ -137,7 +140,7 @@ export function CompanyManagement() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredCompanies.map((company) => (
+              {companies.map((company) => (
                 <Card key={company._id} className="border border-gray-200">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
@@ -236,12 +239,20 @@ export function CompanyManagement() {
             </div>
           )}
 
-          {!loading && filteredCompanies.length === 0 && (
+          {!loading && companies.length === 0 && (
             <div className="text-center py-8">
               <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">Không tìm thấy công ty nào phù hợp với tìm kiếm của bạn.</p>
             </div>
           )}
+          <div className="mt-6">
+            <Pagination
+              currentPage={meta.currentPage}
+              totalPages={meta.totalPages}
+              onPageChange={(page) => setMeta(prev => ({ ...prev, currentPage: page }))}
+              loading={loading}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
