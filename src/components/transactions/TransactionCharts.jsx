@@ -336,7 +336,7 @@ export const TopSpendingUsersChart = ({ data, limit = 5 }) => {
       <Card>
         <CardHeader>
           <CardTitle>Top Người dùng Chi tiêu</CardTitle>
-          <CardDescription>Người dùng chi tiêu nhiều nhất</CardDescription>
+          <CardDescription>Bảng xếp hạng người dùng theo tổng chi tiêu</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
@@ -353,7 +353,7 @@ export const TopSpendingUsersChart = ({ data, limit = 5 }) => {
     <Card>
       <CardHeader>
         <CardTitle>Top {limit} Người dùng Chi tiêu</CardTitle>
-        <CardDescription>Người dùng chi tiêu nhiều nhất</CardDescription>
+        <CardDescription>Bảng xếp hạng người dùng theo tổng chi tiêu</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

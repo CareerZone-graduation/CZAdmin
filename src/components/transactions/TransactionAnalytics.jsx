@@ -7,9 +7,9 @@ import {
   RevenueOverTimeChart, 
   RevenueByRoleChart, 
   RevenueByPaymentMethodChart, 
-  TransactionStatusChart,
-  TopSpendingUsersChart 
+  TransactionStatusChart
 } from './TransactionCharts';
+import { TopUsersTable } from './TopUsersTable';
 import { 
   getTransactionTrends, 
   getTransactionToday, 
@@ -94,6 +94,7 @@ export const TransactionAnalytics = () => {
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('7d');
   const [granularity, setGranularity] = useState('daily');
+  const [topUsersPeriod, setTopUsersPeriod] = useState('30d');
 
   const fetchAnalyticsData = async () => {
     try {
@@ -103,7 +104,7 @@ export const TransactionAnalytics = () => {
       const [trendsResponse, todayResponse, topUsersResponse] = await Promise.all([
         getTransactionTrends({ period, granularity }),
         getTransactionToday(),
-        getTopSpendingUsers({ limit: 10 })
+        getTopSpendingUsers({ period: topUsersPeriod })
       ]);
 
       if (trendsResponse.data.success) {
@@ -135,7 +136,7 @@ export const TransactionAnalytics = () => {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [period, granularity]);
+  }, [period, granularity, topUsersPeriod]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -173,6 +174,48 @@ export const TransactionAnalytics = () => {
 
   return (
     <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Phân tích Giao dịch</h2>
+          <p className="text-muted-foreground">
+            Theo dõi và phân tích các giao dịch trong hệ thống
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="analytics-period" className="text-sm font-medium">
+              Khoảng thời gian:
+            </label>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger id="analytics-period" className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 ngày</SelectItem>
+                <SelectItem value="30d">30 ngày</SelectItem>
+                <SelectItem value="90d">3 tháng</SelectItem>
+                <SelectItem value="1y">1 năm</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="granularity" className="text-sm font-medium">
+              Chi tiết:
+            </label>
+            <Select value={granularity} onValueChange={setGranularity}>
+              <SelectTrigger id="granularity" className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Ngày</SelectItem>
+                <SelectItem value="weekly">Tuần</SelectItem>
+                <SelectItem value="monthly">Tháng</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
       
 
       {/* Today's Statistics */}
@@ -253,49 +296,58 @@ export const TransactionAnalytics = () => {
       <RevenueOverTimeChart />
 
       {/* Charts Grid */}
-      {analyticsData && (
+      {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : analyticsData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <RevenueByRoleChart data={analyticsData.revenueByRole} />
           <RevenueByPaymentMethodChart data={analyticsData.revenueByPaymentMethod} />
           <TransactionStatusChart data={analyticsData.transactionStatusBreakdown} />
-          <TopSpendingUsersChart data={topUsers} limit={5} />
         </div>
       )}
 
-      {/* Top Spending Users Detail */}
-      {topUsers && topUsers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Người dùng Chi tiêu Nhiều nhất</CardTitle>
-            <CardDescription>Danh sách chi tiết người dùng có tổng chi tiêu cao</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topUsers.slice(0, 5).map((user, index) => (
-                <div key={user.userId} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium">{user.email}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.role} • {user.transactionCount} giao dịch
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatCurrency(user.totalSpent)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatNumber(user.totalCoinsRecharged)} xu
-                    </p>
-                  </div>
-                </div>
-              ))}
+      {/* Top Users Ranking Table */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Top Người dùng Chi tiêu</h3>
+            <p className="text-sm text-muted-foreground">
+              Xếp hạng người dùng có tổng chi tiêu cao nhất
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="top-users-period" className="text-sm font-medium">
+                Khoảng thời gian:
+              </label>
+              <Select value={topUsersPeriod} onValueChange={setTopUsersPeriod}>
+                <SelectTrigger id="top-users-period" className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">7 ngày</SelectItem>
+                  <SelectItem value="30d">30 ngày</SelectItem>
+                  <SelectItem value="90d">3 tháng</SelectItem>
+                  <SelectItem value="1y">1 năm</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </div>
+        <TopUsersTable users={topUsers} loading={loading} period={topUsersPeriod} />
+      </div>
     </div>
   );
 };
