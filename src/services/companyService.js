@@ -49,9 +49,9 @@ export const rejectCompany = async (companyId, rejectReason) => {
 
 
 /**
- * Lấy thống kê về các công ty cho trang admin.
+ * Lấy tất cả thống kê cho dashboard và các trang quản lý.
  * @returns {Promise<import('axios').AxiosResponse<any>>}
  */
-export const getCompanyStatsForAdmin = () => {
-  return apiClient.get('/analytics/company-stats');
+export const getSystemStats = () => {
+  return apiClient.get('/admin/stats'); // Endpoint backend đã có
 };

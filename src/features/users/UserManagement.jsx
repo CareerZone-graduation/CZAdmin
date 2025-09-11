@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserListSkeleton } from '@/components/common/UserListSkeleton';
 import { toast } from 'sonner';
 import { getUsers, updateUserStatus } from '@/services/userService';
-import { 
-  Search, 
-  User, 
-  Mail, 
+import { UserStats } from './UserStats'; // <-- IMPORT COMPONENT MỚI
+import {
+  Search,
+  User,
+  Mail,
   Calendar,
   MoreHorizontal,
   UserCheck,
@@ -158,6 +159,9 @@ export function UserManagement() {
         <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
         <p className="text-gray-600">Manage user accounts and permissions</p>
       </div>
+
+      {/* THÊM COMPONENT THỐNG KÊ TẠI ĐÂY */}
+      <UserStats />
 
       <Card>
         <CardHeader>

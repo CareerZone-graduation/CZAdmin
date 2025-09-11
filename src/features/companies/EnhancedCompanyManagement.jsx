@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { industryEnum } from '@/lib/schemas';
 import { toast } from 'sonner';
-import { getAllCompaniesForAdmin, getCompanyStatsForAdmin, approveCompany, rejectCompany, getCompanyProfile } from '@/services/companyService';
+import { getAllCompaniesForAdmin, getSystemStats, approveCompany, rejectCompany, getCompanyProfile } from '@/services/companyService';
 
 export function EnhancedCompanyManagement() {
   const [companies, setCompanies] = useState([]);
@@ -66,7 +66,9 @@ export function EnhancedCompanyManagement() {
         const companyResponse = await getAllCompaniesForAdmin(params);
         if (companyResponse && companyResponse.data && companyResponse.data.success) {
           const { data, meta } = companyResponse.data;
-          const transformedData = data.map(item => ({
+          const transformedData = data
+            .filter(item => item.company && item.company.name)
+            .map(item => ({
             id: item._id,
             name: item.company.name,
             description: item.company.about,
@@ -111,9 +113,17 @@ export function EnhancedCompanyManagement() {
 
     const fetchStats = async () => {
       try {
-        const statsResponse = await getCompanyStatsForAdmin();
+        const statsResponse = await getSystemStats();
         if (statsResponse && statsResponse.data?.success) {
-          setStats(statsResponse.data.data);
+          const companyStats = statsResponse.data.data.companies;
+          setStats({
+            total: companyStats?.total ?? 0,
+            pending: companyStats?.pending ?? 0,
+            // NOTE: The new /admin/stats endpoint does not provide 'approved' or 'rejected' counts for companies.
+            approved: 0,
+            rejected: 0,
+            verified: companyStats?.verified ?? 0,
+          });
         }
       } catch (error) {
         console.error("Failed to fetch stats:", error);
