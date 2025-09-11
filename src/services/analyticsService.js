@@ -43,3 +43,40 @@ export const getUserDemographics = () => {
 export const getJobCategories = () => {
   return apiClient.get('/analytics/job-categories');
 };
+
+/**
+ * GET /api/analytics/transaction-trends
+ * Fetches transaction trend analytics data with filters.
+ * @param {object} params - Query parameters (period, granularity)
+ * @example { period: '7d', granularity: 'daily' }
+ */
+export const getTransactionTrends = (params) => {
+  return apiClient.get('/analytics/transaction-trends', { params });
+};
+
+/**
+ * GET /api/analytics/transaction-today
+ * Fetches today's transaction statistics.
+ */
+export const getTransactionToday = () => {
+  return apiClient.get('/analytics/transaction-today');
+};
+
+/**
+ * GET /api/analytics/top-spending-users
+ * Fetches list of top spending users.
+ * @param {object} params - Query parameters (limit)
+ * @example { limit: 10 }
+ */
+export const getTopSpendingUsers = (params = {}) => {
+  return apiClient.get('/analytics/top-spending-users', { params });
+};
+
+/**
+ * GET /api/analytics/transactions
+ * Fetches paginated transaction list with filters.
+ * @param {object} params - Query parameters (page, limit, search, paymentMethod, startDate, endDate, status, sort)
+ */
+export const getTransactionsList = (params) => {
+  return apiClient.get('/analytics/transactions', { params });
+};
