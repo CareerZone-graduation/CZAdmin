@@ -35,53 +35,47 @@ export const Pagination = ({
     return pages;
   };
 
-  if (totalPages <= 1) {
-    return null;
-  }
-
   return (
-    <div className={`flex items-center justify-end space-x-2 ${className}`}>
+    <div className={`flex items-center justify-center space-x-1 ${className}`}>
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(1)}
         disabled={page === 1 || loading}
-        className="hidden sm:flex"
+        className="px-2"
       >
         <ChevronsLeft className="h-4 w-4" />
       </Button>
       <Button
-        variant="outline"
+        variant="outline" 
         size="sm"
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1 || loading}
+        className="px-2"
       >
         <ChevronLeft className="h-4 w-4" />
-        <span className="ml-1 hidden sm:inline">Previous</span>
       </Button>
 
-      <div className="hidden sm:flex items-center space-x-1">
-        {getPageNumbers().map((pageNum) => (
-          <Button
-            key={pageNum}
-            variant={page === pageNum ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onPageChange(pageNum)}
-            disabled={loading}
-            className="w-9 h-9"
-          >
-            {pageNum}
-          </Button>
-        ))}
-      </div>
+      {getPageNumbers().map((pageNum) => (
+        <Button
+          key={pageNum}
+          variant={page === pageNum ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onPageChange(pageNum)}
+          disabled={loading}
+          className="w-9 h-9"
+        >
+          {pageNum}
+        </Button>
+      ))}
 
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages || loading}
+        className="px-2"
       >
-        <span className="mr-1 hidden sm:inline">Next</span>
         <ChevronRight className="h-4 w-4" />
       </Button>
       <Button
@@ -89,7 +83,7 @@ export const Pagination = ({
         size="sm"
         onClick={() => onPageChange(totalPages)}
         disabled={page === totalPages || loading}
-        className="hidden sm:flex"
+        className="px-2"
       >
         <ChevronsRight className="h-4 w-4" />
       </Button>

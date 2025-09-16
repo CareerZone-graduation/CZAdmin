@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Pagination } from '@/components/common/Pagination';
 import { 
   Check, 
   X, 
@@ -167,6 +168,10 @@ export function EnhancedCompanyManagement() {
 
   const handleSearch = () => {
     setSearchTerm(searchInput);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   // Handle company approval/rejection
@@ -630,28 +635,20 @@ export function EnhancedCompanyManagement() {
               <p className="text-gray-500">No companies match your current filters.</p>
             </div>
           )}
-        </CardContent>
-        <div className="flex justify-center items-center space-x-2 p-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-sm text-gray-500">
+              Trang {currentPage} trên {totalPages}
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              loading={false}
+            />
           </div>
+        </CardContent>
       </Card>
 
       {/* Rejection Reason Dialog */}
