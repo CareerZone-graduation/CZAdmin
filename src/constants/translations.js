@@ -139,16 +139,16 @@ export const TRANSLATIONS = {
     filtered: '(đã lọc)',
     page: 'Trang',
     activeFilters: 'Bộ lọc đang áp dụng:',
-    
+
     // Roles
     admin: 'Quản trị viên',
     recruiter: 'Nhà tuyển dụng',
     candidate: 'Ứng viên',
-    
+
     // Status
     active: 'Hoạt động',
     banned: 'Đã cấm',
-    
+
     // Backend field mapping
     roleField: 'role', // Maps to backend field name
     statusField: 'status', // Maps to backend field name
@@ -179,7 +179,8 @@ export const TRANSLATIONS = {
     bulkReject: 'Từ chối Hàng loạt',
     selected: 'đã chọn',
     advancedFilters: 'Bộ lọc Nâng cao',
-    viewDetails: 'Xem Chi tiết',
+    viewDetails: 'Xem thông tin cơ bản',
+    viewCompanyPage: 'Xem chi tiết công ty',
     companyDetails: 'Thông tin chi tiết về công ty và người đăng ký',
     recruiterInfo: 'Thông tin Nhà tuyển dụng',
     fullname: 'Họ tên',
@@ -215,12 +216,12 @@ export const TRANSLATIONS = {
     confirmReapproval: 'Xác nhận Phê duyệt lại',
     reapprovalMessage: 'Bạn có chắc chắn muốn phê duyệt lại công ty này không? Công ty đã bị từ chối trước đó.',
     reapprove: 'Phê duyệt lại',
-    
+
     // Status
     statusPending: 'Chờ duyệt',
     statusApproved: 'Đã phê duyệt',
     statusRejected: 'Đã từ chối',
-    
+
     // Backend field mapping
     statusField: 'status', // Maps to backend field name
     verifiedField: 'verified', // Maps to backend field name
@@ -247,13 +248,13 @@ export const TRANSLATIONS = {
     deactivate: 'Vô hiệu hóa',
     noJobsFound: 'Không tìm thấy công việc nào phù hợp với tiêu chí.',
     tryAgain: 'Thử lại',
-    
+
     // Status
     active: 'Hoạt động',
     inactive: 'Không hoạt động',
     pending: 'Chờ duyệt',
     expired: 'Hết hạn',
-    
+
     // Toast messages
     approveSuccess: 'Đã phê duyệt công việc',
     rejectSuccess: 'Đã từ chối công việc',
@@ -261,7 +262,7 @@ export const TRANSLATIONS = {
     updateSuccess: 'Đã cập nhật trạng thái công việc',
     updateError: 'Không thể cập nhật trạng thái công việc',
     loadError: 'Không thể tải danh sách công việc',
-    
+
     // Backend field mapping  
     statusField: 'status', // Maps to backend field name
   },
@@ -274,12 +275,12 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'Tìm kiếm theo ID, email...',
     allTypes: 'Tất cả Loại',
     allStatuses: 'Tất cả Trạng thái',
-    
+
     // Types
     recharge: 'Nạp tiền',
     payment: 'Thanh toán',
     refund: 'Hoàn tiền',
-    
+
     // Status
     completed: 'Hoàn thành',
     pending: 'Chờ xử lý',
@@ -292,12 +293,12 @@ export const TRANSLATIONS = {
     // User status
     userActive: { api: 'active', display: 'Hoạt động' },
     userBanned: { api: 'banned', display: 'Đã cấm' },
-    
+
     // Company status
     companyPending: { api: 'pending', display: 'Chờ duyệt' },
     companyApproved: { api: 'approved', display: 'Đã phê duyệt' },
     companyRejected: { api: 'rejected', display: 'Đã từ chối' },
-    
+
     // Job status
     jobActive: { api: 'ACTIVE', display: 'Hoạt động' },
     jobInactive: { api: 'INACTIVE', display: 'Không hoạt động' },
@@ -310,12 +311,12 @@ export const TRANSLATIONS = {
 export const t = (key) => {
   const keys = key.split('.');
   let value = TRANSLATIONS;
-  
+
   for (const k of keys) {
     value = value?.[k];
     if (value === undefined) return key;
   }
-  
+
   return value;
 };
 

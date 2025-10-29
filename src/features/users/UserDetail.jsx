@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getUserDetail } from '@/services/userService';
+import { EntityNavigationLink } from '@/components/common/EntityNavigationLink';
 import {
   ArrowLeft,
   User,
@@ -374,6 +375,14 @@ export function UserDetail() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h3 className="text-xl font-semibold">{userDetail.company.name}</h3>
+                        {userDetail.recruiterProfileId && (
+                          <EntityNavigationLink
+                            entityType="company"
+                            entityId={userDetail.recruiterProfileId}
+                            entityName="Xem chi tiết công ty"
+                            variant="button"
+                          />
+                        )}
                         {userDetail.company.verified && (
                           <Badge className="bg-green-100 text-green-800">
                             <CheckCircle className="w-3 h-3 mr-1" />

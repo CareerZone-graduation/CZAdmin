@@ -43,3 +43,13 @@ export const updateJobStatus = async (jobId, status) => {
 export const getJobDetailForAdmin = async (jobId) => {
   return await apiClient.get(`/admin/jobs/${jobId}`)
 }
+
+// Activate job
+export const activateJob = async (jobId) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/activate`, {}, { showToast: true })
+}
+
+// Deactivate job
+export const deactivateJob = async (jobId) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/deactivate`, {}, { showToast: true })
+}

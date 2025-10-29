@@ -592,6 +592,15 @@ export function EnhancedCompanyManagement() {
                         )}
                       </Dialog>
                       
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => window.open(`http://localhost:3200/companies/${company.id}`, '_blank')}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        {t('companies.viewCompanyPage')}
+                      </Button>
+                      
                       {company.status === 'pending' && (
                           <Button
                             size="sm"

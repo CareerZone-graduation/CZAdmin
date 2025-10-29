@@ -55,3 +55,13 @@ export const rejectCompany = async (companyId, rejectReason) => {
 export const getSystemStats = () => {
   return apiClient.get('/admin/stats'); // Endpoint backend đã có
 };
+
+/**
+ * Lấy danh sách jobs của công ty
+ * @param {string} companyId - Company ID (RecruiterProfile ID)
+ * @param {Object} params - Query parameters
+ * @returns {Promise<import('axios').AxiosResponse<any>>}
+ */
+export const getCompanyJobs = async (companyId, params = {}) => {
+  return await apiClient.get(`/admin/companies/${companyId}/jobs`, { params });
+};

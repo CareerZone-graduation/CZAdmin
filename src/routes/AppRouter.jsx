@@ -6,6 +6,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { CompanyManagementPage } from '@/pages/CompanyManagementPage';
+import { CompanyDetailPage } from '@/pages/CompanyDetailPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
 import { UserDetailPage } from '@/pages/UserDetailPage';
 import { JobManagementPage } from '@/pages/JobManagementPage';
@@ -45,6 +46,11 @@ function AppRouter() {
       <Route path="/companies" element={
         <ProtectedRoute>
           <CompanyManagementPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/companies/:id" element={
+        <ProtectedRoute>
+          <CompanyDetailPage />
         </ProtectedRoute>
       } />
       <Route path="/users" element={
