@@ -15,13 +15,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logoutUser } from '@/features/auth/authSlice';
+import { t } from '@/constants/translations';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-  { id: 'companies', label: 'Companies', icon: Building2, path: '/companies', badge: 3 },
-  { id: 'users', label: 'Users', icon: Users, path: '/users' },
-  { id: 'jobs', label: 'Jobs', icon: Briefcase, path: '/jobs', badge: 1 },
-  { id: 'transactions', label: 'Transactions', icon: CreditCard, path: '/transactions' },
+  { id: 'dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard, path: '/dashboard' },
+  { id: 'companies', label: t('sidebar.companies'), icon: Building2, path: '/companies', badge: 3 },
+  { id: 'users', label: t('sidebar.users'), icon: Users, path: '/users' },
+  { id: 'jobs', label: t('sidebar.jobs'), icon: Briefcase, path: '/jobs', badge: 1 },
+  { id: 'transactions', label: t('sidebar.transactions'), icon: CreditCard, path: '/transactions' },
 ];
 
 export function Sidebar({ className }) {
@@ -49,8 +50,8 @@ export function Sidebar({ className }) {
             <Building2 className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">CareerZone</h2>
-            <p className="text-xs text-gray-500">Admin Panel</p>
+            <h2 className="font-bold text-lg">{t('sidebar.title')}</h2>
+            <p className="text-xs text-gray-500">{t('sidebar.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -84,11 +85,11 @@ export function Sidebar({ className }) {
       <div className="p-4 border-t space-y-2">
         <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-100">
           <Bell className="w-4 h-4 mr-3" />
-          Notifications
+          {t('sidebar.notifications')}
         </Button>
         <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-100">
           <Settings className="w-4 h-4 mr-3" />
-          Settings
+          {t('sidebar.settings')}
         </Button>
         <Button 
           variant="ghost" 
@@ -96,7 +97,7 @@ export function Sidebar({ className }) {
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-3" />
-          Logout
+          {t('sidebar.logout')}
         </Button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination } from '@/components/common/Pagination';
+import { t } from '@/constants/translations';
 import { 
   Check, 
   X, 
@@ -139,9 +140,9 @@ export function EnhancedCompanyManagement() {
   // Get status badge styling
   const getStatusBadge = (status, verified) => {
     const statusStyles = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle }
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock, label: t('companies.statusPending') },
+      approved: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle, label: t('companies.statusApproved') },
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle, label: t('companies.statusRejected') }
     };
     
     const style = statusStyles[status] || statusStyles.pending;
@@ -151,12 +152,12 @@ export function EnhancedCompanyManagement() {
       <div className="flex items-center space-x-2">
         <Badge className={`${style.bg} ${style.text} flex items-center space-x-1`}>
           <Icon className="w-3 h-3" />
-          <span className="capitalize">{status.replace('_', ' ')}</span>
+          <span className="capitalize">{style.label}</span>
         </Badge>
         {verified && (
           <Badge className="bg-blue-100 text-blue-800">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Verified
+            {t('companies.verified')}
           </Badge>
         )}
       </div>
@@ -374,22 +375,22 @@ export function EnhancedCompanyManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Company Management</h1>
-          <p className="text-gray-600">Review, verify, and manage company registrations with advanced tools</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('companies.title')}</h1>
+          <p className="text-gray-600">{t('companies.description')}</p>
         </div>
         <div className="flex items-center space-x-3">
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           {bulkSelection.size > 0 && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">{bulkSelection.size} selected</span>
+              <span className="text-sm text-gray-600">{bulkSelection.size} {t('companies.selected')}</span>
               <Button size="sm" onClick={() => handleBulkAction('approved')} className="bg-green-600 hover:bg-green-700">
-                Bulk Approve
+                {t('companies.bulkApprove')}
               </Button>
               <Button size="sm" variant="outline" onClick={() => handleBulkAction('rejected')}>
-                Bulk Reject
+                {t('companies.bulkReject')}
               </Button>
             </div>
           )}
@@ -401,31 +402,31 @@ export function EnhancedCompanyManagement() {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-600">Total Companies</div>
+            <div className="text-sm text-gray-600">{t('companies.totalCompanies')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">Pending Review</div>
+            <div className="text-sm text-gray-600">{t('companies.pendingReview')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-gray-600">Approved</div>
+            <div className="text-sm text-gray-600">{t('companies.approved')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-            <div className="text-sm text-gray-600">Rejected</div>
+            <div className="text-sm text-gray-600">{t('companies.rejected')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">{stats.verified}</div>
-            <div className="text-sm text-gray-600">Verified</div>
+            <div className="text-sm text-gray-600">{t('companies.verified')}</div>
           </CardContent>
         </Card>
       </div>
@@ -435,14 +436,14 @@ export function EnhancedCompanyManagement() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Filter className="w-5 h-5" />
-            <span>Advanced Filters</span>
+            <span>{t('companies.advancedFilters')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Input
-                placeholder="Search by name, email, etc..."
+                placeholder={t('companies.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -458,21 +459,21 @@ export function EnhancedCompanyManagement() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t('companies.filterByStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">{t('companies.allStatuses')}</SelectItem>
+                <SelectItem value="pending">{t('companies.statusPending')}</SelectItem>
+                <SelectItem value="approved">{t('companies.statusApproved')}</SelectItem>
+                <SelectItem value="rejected">{t('companies.statusRejected')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={industryFilter} onValueChange={setIndustryFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by industry" />
+                <SelectValue placeholder={t('companies.filterByIndustry')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Industries</SelectItem>
+                <SelectItem value="all">{t('companies.allIndustries')}</SelectItem>
                 {industryEnum.options.map(industry => (
                   <SelectItem key={industry} value={industry}>{industry}</SelectItem>
                 ))}
@@ -480,13 +481,13 @@ export function EnhancedCompanyManagement() {
             </Select>
             <Select value={sortOption} onValueChange={setSortOption}>
               <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t('users.sortBy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="createdAt_desc">Newest</SelectItem>
-                <SelectItem value="createdAt_asc">Oldest</SelectItem>
-                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                <SelectItem value="createdAt_desc">{t('companies.newest')}</SelectItem>
+                <SelectItem value="createdAt_asc">{t('companies.oldest')}</SelectItem>
+                <SelectItem value="name_asc">{t('companies.nameAZ')}</SelectItem>
+                <SelectItem value="name_desc">{t('companies.nameZA')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -496,9 +497,9 @@ export function EnhancedCompanyManagement() {
       {/* Companies List */}
       <Card>
         <CardHeader>
-          <CardTitle>Company Applications</CardTitle>
+          <CardTitle>{t('companies.applications')}</CardTitle>
           <CardDescription>
-            {companies.length} companies found
+            {t('companies.applicationsDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -576,7 +577,7 @@ export function EnhancedCompanyManagement() {
                         <DialogTrigger asChild>
                           <Button size="sm" variant="outline" onClick={() => handleViewDetails(company)}>
                             <Eye className="w-4 h-4 mr-1" />
-                            View Details
+                            {t('companies.viewDetails')}
                           </Button>
                         </DialogTrigger>
                         {selectedCompany && selectedCompany.id === company.id && (
@@ -602,7 +603,7 @@ export function EnhancedCompanyManagement() {
                             className="text-red-600 border-red-600 hover:bg-red-50"
                           >
                             <X className="w-4 h-4 mr-1" />
-                            Reject
+                            {t('common.reject')}
                           </Button>
                       )}
                       {(company.status === 'pending' || company.status === 'rejected') && (
@@ -619,7 +620,7 @@ export function EnhancedCompanyManagement() {
                             className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
                           >
                             <Check className="w-4 h-4 mr-1" />
-                            {company.status === 'rejected' ? 'Xem xét lại' : 'Approve'}
+                            {company.status === 'rejected' ? t('companies.reconsider') : t('common.approve')}
                           </Button>
                       )}
                     </div>
@@ -655,28 +656,28 @@ export function EnhancedCompanyManagement() {
       <Dialog open={isRejecting} onOpenChange={setIsRejecting}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Company Registration</DialogTitle>
+            <DialogTitle>{t('common.reject')} {t('companies.title')}</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting this company. This will be sent to the recruiter.
+              {t('companies.rejectionReason')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="e.g., Invalid tax code, missing documentation..."
+              placeholder={t('companies.enterRejectionReason')}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRejecting(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => handleCompanyAction(selectedCompany.id, 'rejected', rejectionReason)}
               disabled={!rejectionReason.trim()}
             >
-              Confirm Rejection
+              {t('common.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -686,14 +687,14 @@ export function EnhancedCompanyManagement() {
       <Dialog open={isConfirmingReapproval} onOpenChange={setIsConfirmingReapproval}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận phê duyệt lại</DialogTitle>
+            <DialogTitle>{t('companies.confirmReapproval')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn phê duyệt lại công ty "{selectedCompany?.name}" không?
+              {t('companies.reapprovalMessage')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsConfirmingReapproval(false)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               className="bg-blue-600 hover:bg-blue-700"
@@ -703,7 +704,7 @@ export function EnhancedCompanyManagement() {
                 setSelectedCompany(null);
               }}
             >
-              Xác nhận
+              {t('companies.reapprove')}
             </Button>
           </DialogFooter>
         </DialogContent>

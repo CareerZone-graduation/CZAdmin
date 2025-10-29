@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { getUsers, updateUserStatus } from '@/services/userService';
 import { UserStats } from './UserStats'; // <-- IMPORT COMPONENT MỚI
 import { Pagination } from '@/components/common/Pagination';
+import { t } from '@/constants/translations';
 import {
   Search,
   User,
@@ -136,11 +137,11 @@ export function UserManagement() {
   const getRoleBadge = (role) => {
     switch (role) {
       case 'admin':
-        return <Badge className="bg-purple-100 text-purple-800">Admin</Badge>;
+        return <Badge className="bg-purple-100 text-purple-800">{t('users.admin')}</Badge>;
       case 'recruiter':
-        return <Badge className="bg-blue-100 text-blue-800">Recruiter</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">{t('users.recruiter')}</Badge>;
       case 'candidate':
-        return <Badge variant="outline">Candidate</Badge>;
+        return <Badge variant="outline">{t('users.candidate')}</Badge>;
       default:
         return null;
     }
@@ -148,15 +149,15 @@ export function UserManagement() {
 
   const getStatusBadge = (active) => {
     return active ? 
-      <Badge className="bg-green-100 text-green-800">Active</Badge> :
-      <Badge variant="destructive">Banned</Badge>;
+      <Badge className="bg-green-100 text-green-800">{t('users.active')}</Badge> :
+      <Badge variant="destructive">{t('users.banned')}</Badge>;
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-gray-600">Manage user accounts and permissions</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('users.title')}</h1>
+        <p className="text-gray-600">{t('users.description')}</p>
       </div>
 
       {/* THÊM COMPONENT THỐNG KÊ TẠI ĐÂY */}
@@ -164,9 +165,9 @@ export function UserManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>User Directory</CardTitle>
+          <CardTitle>{t('users.directory')}</CardTitle>
           <CardDescription>
-            View and manage all registered users on the platform
+            {t('users.directoryDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -174,7 +175,7 @@ export function UserManagement() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search users by name or email..."
+                placeholder={t('users.searchPlaceholder')}
                 value={searchInput}
                 onChange={handleSearchChange}
                 onKeyPress={handleSearchKeyPress}
@@ -197,39 +198,39 @@ export function UserManagement() {
                   disabled={loading}
                   className="h-6 px-2 text-xs"
                 >
-                  Search
+                  {t('common.search')}
                 </Button>
               </div>
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filter by role" />
+                <SelectValue placeholder={t('users.filterByRole')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="candidate">Candidate</SelectItem>
-                <SelectItem value="recruiter">Recruiter</SelectItem>
+                <SelectItem value="all">{t('users.allRoles')}</SelectItem>
+                <SelectItem value="candidate">{t('users.candidate')}</SelectItem>
+                <SelectItem value="recruiter">{t('users.recruiter')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t('users.filterByStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="banned">Banned</SelectItem>
+                <SelectItem value="all">{t('users.allStatus')}</SelectItem>
+                <SelectItem value="active">{t('users.active')}</SelectItem>
+                <SelectItem value="banned">{t('users.banned')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t('users.sortBy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="-createdAt">Newest First</SelectItem>
-                <SelectItem value="createdAt">Oldest First</SelectItem>
-                <SelectItem value="fullname">Name A-Z</SelectItem>
-                <SelectItem value="-fullname">Name Z-A</SelectItem>
+                <SelectItem value="-createdAt">{t('users.newestFirst')}</SelectItem>
+                <SelectItem value="createdAt">{t('users.oldestFirst')}</SelectItem>
+                <SelectItem value="fullname">{t('users.nameAZ')}</SelectItem>
+                <SelectItem value="-fullname">{t('users.nameZA')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -237,10 +238,10 @@ export function UserManagement() {
           {/* Active filters indicator */}
           {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
             <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
-              <span className="text-sm text-blue-700 font-medium">Active filters:</span>
+              <span className="text-sm text-blue-700 font-medium">{t('users.activeFilters')}</span>
               {searchTerm && (
                 <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>Search: "{searchTerm}"</span>
+                  <span>{t('common.search')}: "{searchTerm}"</span>
                   <button
                     onClick={handleClearSearch}
                     className="ml-1 hover:bg-blue-200 rounded p-0.5"
@@ -251,7 +252,7 @@ export function UserManagement() {
               )}
               {roleFilter !== 'all' && (
                 <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>Role: {roleFilter}</span>
+                  <span>Vai trò: {roleFilter}</span>
                   <button
                     onClick={() => setRoleFilter('all')}
                     className="ml-1 hover:bg-blue-200 rounded p-0.5"
@@ -262,7 +263,7 @@ export function UserManagement() {
               )}
               {statusFilter !== 'all' && (
                 <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>Status: {statusFilter}</span>
+                  <span>{t('common.status')}: {statusFilter}</span>
                   <button
                     onClick={() => setStatusFilter('all')}
                     className="ml-1 hover:bg-blue-200 rounded p-0.5"
@@ -283,18 +284,18 @@ export function UserManagement() {
                 <div className="text-sm text-gray-600">
                   {totalItems > 0 ? (
                     <>
-                      Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalItems)} of {totalItems} users
+                      {t('users.showing')} {((currentPage - 1) * limit) + 1} {t('users.to')} {Math.min(currentPage * limit, totalItems)} {t('users.of')} {totalItems} người dùng
                       {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
-                        <span className="text-blue-600 ml-1">(filtered)</span>
+                        <span className="text-blue-600 ml-1">{t('users.filtered')}</span>
                       )}
                     </>
                   ) : (
-                    'No users found'
+                    t('users.noUsersFound')
                   )}
                 </div>
                 {totalItems > 0 && (
                   <div className="text-sm text-gray-500">
-                    Page {currentPage} of {totalPages}
+                    {t('users.page')} {currentPage} {t('users.of')} {totalPages}
                   </div>
                 )}
               </div>
@@ -321,7 +322,7 @@ export function UserManagement() {
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Calendar className="w-3 h-3" />
-                                <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                                <span>{t('users.joined')} {new Date(user.createdAt).toLocaleDateString('vi-VN')}</span>
                               </div>
                             </div>
                           </div>
@@ -334,7 +335,7 @@ export function UserManagement() {
                               onClick={() => handleStatusChange(user._id, 'banned')}
                             >
                               <UserX className="w-4 h-4 mr-1" />
-                              Ban User
+                              {t('users.banUser')}
                             </Button>
                           ) : (
                             <Button
@@ -342,7 +343,7 @@ export function UserManagement() {
                               onClick={() => handleStatusChange(user._id, 'active')}
                             >
                               <UserCheck className="w-4 h-4 mr-1" />
-                              Activate
+                              {t('users.activate')}
                             </Button>
                           )}
                           <Button size="sm" variant="ghost">
@@ -358,7 +359,7 @@ export function UserManagement() {
               {users.length === 0 && !loading && (
                 <div className="text-center py-8">
                   <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No users found matching your criteria.</p>
+                  <p className="text-gray-500">{t('users.noUsersFound')}</p>
                 </div>
               )}
 

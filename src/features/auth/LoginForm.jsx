@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Shield, Briefcase, Users, Building2 } from 'lucide-react';
 import { loginUser } from './authSlice';
+import { t } from '@/constants/translations';
 
 export function LoginForm({ className }) {
   const dispatch = useDispatch();
@@ -43,11 +44,10 @@ export function LoginForm({ className }) {
             <h1 className="text-4xl font-bold">CareerZone</h1>
           </div>
           <p className="text-xl text-blue-100">
-            Comprehensive recruitment management platform
+            {t('login.platformDescription')}
           </p>
           <p className="text-lg text-blue-200 leading-relaxed">
-            Streamline your hiring process with powerful admin tools for managing companies, 
-            users, job listings, and transactions all in one place.
+            {t('login.fullDescription')}
           </p>
         </div>
 
@@ -58,8 +58,8 @@ export function LoginForm({ className }) {
               <Building2 className="w-5 h-5 text-blue-300" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">Company Management</h3>
-              <p className="text-blue-200 text-sm">Review and approve company registrations</p>
+              <h3 className="font-semibold text-white">{t('login.companyManagement')}</h3>
+              <p className="text-blue-200 text-sm">{t('login.companyManagementDesc')}</p>
             </div>
           </div>
           
@@ -68,8 +68,8 @@ export function LoginForm({ className }) {
               <Users className="w-5 h-5 text-purple-300" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">User Administration</h3>
-              <p className="text-blue-200 text-sm">Manage user accounts and permissions</p>
+              <h3 className="font-semibold text-white">{t('login.userAdministration')}</h3>
+              <p className="text-blue-200 text-sm">{t('login.userAdministrationDesc')}</p>
             </div>
           </div>
           
@@ -78,8 +78,8 @@ export function LoginForm({ className }) {
               <Briefcase className="w-5 h-5 text-indigo-300" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">Job Oversight</h3>
-              <p className="text-blue-200 text-sm">Monitor and moderate job listings</p>
+              <h3 className="font-semibold text-white">{t('login.jobOversight')}</h3>
+              <p className="text-blue-200 text-sm">{t('login.jobOversightDesc')}</p>
             </div>
           </div>
         </div>
@@ -93,9 +93,9 @@ export function LoginForm({ className }) {
               <Shield className="w-8 h-8 text-white" />
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-3xl font-bold text-gray-900">Welcome Back</CardTitle>
+              <CardTitle className="text-3xl font-bold text-gray-900">{t('login.welcomeBack')}</CardTitle>
               <CardDescription className="text-gray-600 text-base">
-                Sign in to access your admin dashboard
+                {t('login.signInDescription')}
               </CardDescription>
             </div>
           </CardHeader>
@@ -103,11 +103,11 @@ export function LoginForm({ className }) {
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">{t('login.email')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@careerzone.com"
+                  placeholder={t('login.emailPlaceholder')}
                   value={credentials.email}
                   onChange={handleInputChange('email')}
                   className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 bg-white/80"
@@ -116,12 +116,12 @@ export function LoginForm({ className }) {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">{t('login.password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder={t('login.passwordPlaceholder')}
                     value={credentials.password}
                     onChange={handleInputChange('password')}
                     className="h-12 pr-12 border-gray-300 focus:border-green-500 focus:ring-green-500 bg-white/80"
@@ -157,10 +157,10 @@ export function LoginForm({ className }) {
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Signing in...</span>
+                    <span>{t('login.signingIn')}</span>
                   </div>
                 ) : (
-                  'Sign In to Dashboard'
+                  t('login.signIn')
                 )}
               </Button>
             </form>

@@ -19,6 +19,7 @@ import {
 import { getDashboardStats } from '@/services/analyticsService';
 import { kpiData, systemHealth } from '@/data/analyticsData'; // Keep these for now, will be replaced later
 import { Skeleton } from '@/components/ui/skeleton';
+import { t } from '@/constants/translations';
 
 // Enhanced Metric Card Component
 const MetricCard = ({ title, value, change, trend, icon: Icon, description, color = "blue" }) => {
@@ -47,7 +48,7 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, description, colo
         <div className={`flex items-center text-xs ${trendColor} mt-1`}>
           <TrendIcon className="w-3 h-3 mr-1" />
           {change}
-          {description && <span className="text-gray-500 ml-1">from last month</span>}
+          {description && <span className="text-gray-500 ml-1">{t('dashboard.fromLastMonth')}</span>}
         </div>
         {description && (
           <p className="text-xs text-gray-500 mt-2">{description}</p>
@@ -70,14 +71,14 @@ export const SystemHealthCard = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-green-600" />
-          System Health
+          {t('dashboard.systemHealthTitle')}
         </CardTitle>
-        <CardDescription>Real-time platform performance metrics</CardDescription>
+        <CardDescription>{t('dashboard.platformPerformance')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Uptime</span>
+            <span className="text-sm font-medium">{t('dashboard.uptime')}</span>
             <Badge variant="outline" className="text-green-600">
               {systemHealth.uptime}
             </Badge>
@@ -85,28 +86,28 @@ export const SystemHealthCard = () => {
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Server Load</span>
+              <span className="text-sm font-medium">{t('dashboard.serverLoad')}</span>
               <span className="text-sm text-gray-600">{systemHealth.serverLoad}%</span>
             </div>
             <Progress value={systemHealth.serverLoad} className="h-2" />
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Response Time</span>
+            <span className="text-sm font-medium">{t('dashboard.responseTime')}</span>
             <Badge variant="outline" className="text-blue-600">
               {systemHealth.responseTime}
             </Badge>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Active Users</span>
+            <span className="text-sm font-medium">{t('dashboard.activeUsers')}</span>
             <span className="text-sm font-semibold text-gray-900">
               {systemHealth.activeUsers.toLocaleString()}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Error Rate</span>
+            <span className="text-sm font-medium">{t('dashboard.errorRate')}</span>
             <Badge variant="outline" className="text-green-600">
               {systemHealth.errorRate}%
             </Badge>
@@ -158,7 +159,7 @@ export const EnhancedStatsCards = () => {
         
         const formattedStats = [
           {
-            title: 'Total Users',
+            title: t('dashboard.totalUsers'),
             value: data.totalUsers.toLocaleString(),
             change: `${data.growth.users >= 0 ? '+' : ''}${data.growth.users}%`,
             trend: data.growth.users >= 0 ? 'up' : 'down',
@@ -166,7 +167,7 @@ export const EnhancedStatsCards = () => {
             color: 'blue'
           },
           {
-            title: 'Active Companies',
+            title: t('dashboard.activeCompanies'),
             value: data.activeCompanies.toLocaleString(),
             change: `${data.growth.companies >= 0 ? '+' : ''}${data.growth.companies}%`,
             trend: data.growth.companies >= 0 ? 'up' : 'down',
@@ -174,7 +175,7 @@ export const EnhancedStatsCards = () => {
             color: 'green'
           },
           {
-            title: 'Job Listings',
+            title: t('dashboard.jobListings'),
             value: data.jobListings.toLocaleString(),
             change: `${data.growth.jobs >= 0 ? '+' : ''}${data.growth.jobs}%`,
             trend: data.growth.jobs >= 0 ? 'up' : 'down',
@@ -182,7 +183,7 @@ export const EnhancedStatsCards = () => {
             color: 'purple'
           },
           {
-            title: 'Monthly Revenue',
+            title: t('dashboard.monthlyRevenue'),
             value: `$${data.monthlyRevenue.toLocaleString()}`,
             change: `${data.growth.revenue >= 0 ? '+' : ''}${data.growth.revenue}%`,
             trend: data.growth.revenue >= 0 ? 'up' : 'down',
@@ -190,7 +191,7 @@ export const EnhancedStatsCards = () => {
             color: 'orange'
           },
           {
-            title: 'Total Applications',
+            title: t('dashboard.totalApplications'),
             value: data.totalApplications.toLocaleString(),
             change: `${data.growth.applications >= 0 ? '+' : ''}${data.growth.applications}%`,
             trend: data.growth.applications >= 0 ? 'up' : 'down',
@@ -198,7 +199,7 @@ export const EnhancedStatsCards = () => {
             color: 'indigo'
           },
           {
-            title: 'Total Interviews',
+            title: t('dashboard.totalInterviews'),
             value: data.totalInterviews.toLocaleString(),
             change: `${data.growth.interviews >= 0 ? '+' : ''}${data.growth.interviews}%`,
             trend: data.growth.interviews >= 0 ? 'up' : 'down',
@@ -208,7 +209,7 @@ export const EnhancedStatsCards = () => {
         ];
         setStats(formattedStats);
       } catch (err) {
-        setError('Failed to fetch dashboard stats.');
+        setError(t('dashboard.failedToFetchStats'));
         console.error(err);
       } finally {
         setLoading(false);
