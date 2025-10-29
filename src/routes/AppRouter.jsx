@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { CompanyManagementPage } from '@/pages/CompanyManagementPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
+import { UserDetailPage } from '@/pages/UserDetailPage';
 import { JobManagementPage } from '@/pages/JobManagementPage';
 import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
 
@@ -49,6 +50,11 @@ function AppRouter() {
       <Route path="/users" element={
         <ProtectedRoute>
           <UserManagementPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/users/:id" element={
+        <ProtectedRoute>
+          <UserDetailPage />
         </ProtectedRoute>
       } />
       <Route path="/jobs" element={

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,16 +20,21 @@ import {
   UserCheck,
   UserX,
   Shield,
-  X
+  X,
+  Eye,
+  Building2,
+  AlertCircle
 } from 'lucide-react';
 
 export function UserManagement() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState(''); // Separate state for input value
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [companyRegistrationFilter, setCompanyRegistrationFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -57,6 +63,10 @@ export function UserManagement() {
         params.status = statusFilter;
       }
 
+      if (companyRegistrationFilter !== 'all' && roleFilter === 'recruiter') {
+        params.companyRegistration = companyRegistrationFilter;
+      }
+
       const response = await getUsers(params);
       
       setUsers(response.data.data || []);
@@ -71,7 +81,7 @@ export function UserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, roleFilter, statusFilter, sortBy]);
+  }, [currentPage, searchTerm, roleFilter, statusFilter, companyRegistrationFilter, sortBy]);
 
   // Load users on component mount and when dependencies change
   useEffect(() => {
@@ -83,7 +93,7 @@ export function UserManagement() {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [searchTerm, roleFilter, statusFilter, sortBy]);
+  }, [searchTerm, roleFilter, statusFilter, companyRegistrationFilter, sortBy]);
 
   // Handle search action
   const handleSearch = () => {
@@ -222,6 +232,18 @@ export function UserManagement() {
                 <SelectItem value="banned">{t('users.banned')}</SelectItem>
               </SelectContent>
             </Select>
+            {roleFilter === 'recruiter' && (
+              <Select value={companyRegistrationFilter} onValueChange={setCompanyRegistrationFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Trạng thái công ty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả</SelectItem>
+                  <SelectItem value="registered">Đã đăng ký công ty</SelectItem>
+                  <SelectItem value="not-registered">Chưa đăng ký công ty</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <Select value={sortBy} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder={t('users.sortBy')} />
@@ -236,7 +258,7 @@ export function UserManagement() {
           </div>
 
           {/* Active filters indicator */}
-          {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+          {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all' || companyRegistrationFilter !== 'all') && (
             <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
               <span className="text-sm text-blue-700 font-medium">{t('users.activeFilters')}</span>
               {searchTerm && (
@@ -272,6 +294,17 @@ export function UserManagement() {
                   </button>
                 </div>
               )}
+              {companyRegistrationFilter !== 'all' && (
+                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                  <span>Công ty: {companyRegistrationFilter === 'registered' ? 'Đã đăng ký' : 'Chưa đăng ký'}</span>
+                  <button
+                    onClick={() => setCompanyRegistrationFilter('all')}
+                    className="ml-1 hover:bg-blue-200 rounded p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -285,7 +318,7 @@ export function UserManagement() {
                   {totalItems > 0 ? (
                     <>
                       {t('users.showing')} {((currentPage - 1) * limit) + 1} {t('users.to')} {Math.min(currentPage * limit, totalItems)} {t('users.of')} {totalItems} người dùng
-                      {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+                      {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all' || companyRegistrationFilter !== 'all') && (
                         <span className="text-blue-600 ml-1">{t('users.filtered')}</span>
                       )}
                     </>
@@ -305,15 +338,27 @@ export function UserManagement() {
                   <Card key={user._id} className="border border-gray-200">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 flex-1">
                           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                             <User className="w-6 h-6 text-gray-600" />
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
-                              <h3 className="font-semibold">{user.fullname}</h3>
+                              <h3 className="font-semibold">{user.fullname || 'Chưa cập nhật'}</h3>
                               {getRoleBadge(user.role)}
                               {getStatusBadge(user.active)}
+                              {user.role === 'recruiter' && user.hasCompany === false && (
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  Chưa đăng ký công ty
+                                </Badge>
+                              )}
+                              {user.role === 'recruiter' && user.hasCompany === true && (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <Building2 className="w-3 h-3 mr-1" />
+                                  Có công ty
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
                               <div className="flex items-center space-x-1">
@@ -328,6 +373,14 @@ export function UserManagement() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/users/${user._id}`)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Xem chi tiết
+                          </Button>
                           {user.active ? (
                             <Button
                               size="sm"
@@ -346,9 +399,6 @@ export function UserManagement() {
                               {t('users.activate')}
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
                         </div>
                       </div>
                     </CardContent>

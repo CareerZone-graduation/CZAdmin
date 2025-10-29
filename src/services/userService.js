@@ -44,6 +44,19 @@ export const getUsers = (params = {}) => {
 };
 
 /**
+ * Get user detail by ID
+ * @param {string} userId - User ID
+ * @returns {Promise<import('axios').AxiosResponse<{
+ *   success: boolean,
+ *   message: string,
+ *   data: Object
+ * }>>}
+ */
+export const getUserDetail = (userId) => {
+  return apiClient.get(`/admin/users/${userId}`);
+};
+
+/**
  * Update user status
  * @param {string} userId - User ID
  * @param {Object} statusData - Status data
