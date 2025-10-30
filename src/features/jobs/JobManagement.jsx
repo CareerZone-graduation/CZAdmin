@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob } from '@/services/jobService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
 import { Pagination } from '@/components/common/Pagination';
@@ -95,6 +95,42 @@ export function JobManagement() {
       toast.success(statusMessages[newStatus] || 'Đã cập nhật trạng thái công việc');
     } catch (error) {
       toast.error(error.message || 'Không thể cập nhật trạng thái công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleActivateJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      await activateJob(jobId);
+      
+      // Update local state
+      setJobs(prev => prev.map(job => 
+        job._id === jobId ? { ...job, status: 'ACTIVE', approved: true } : job
+      ));
+      
+      toast.success('Đã kích hoạt lại công việc');
+    } catch (error) {
+      toast.error(error.message || 'Không thể kích hoạt lại công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleDeactivateJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      await deactivateJob(jobId);
+      
+      // Update local state
+      setJobs(prev => prev.map(job => 
+        job._id === jobId ? { ...job, status: 'INACTIVE' } : job
+      ));
+      
+      toast.success('Đã vô hiệu hóa công việc');
+    } catch (error) {
+      toast.error(error.message || 'Không thể vô hiệu hóa công việc');
     } finally {
       setLoading(false);
     }
@@ -251,10 +287,21 @@ export function JobManagement() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleStatusChange(job._id, 'INACTIVE')}
+                            onClick={() => handleDeactivateJob(job._id)}
                             disabled={loading}
                           >
                             Vô hiệu hóa
+                          </Button>
+                        )}
+                        {job.status === 'INACTIVE' && (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleActivateJob(job._id)}
+                            disabled={loading}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Kích hoạt lại
                           </Button>
                         )}
                       </div>
