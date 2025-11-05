@@ -53,3 +53,13 @@ export const activateJob = async (jobId) => {
 export const deactivateJob = async (jobId) => {
   return await apiClient.patch(`/admin/jobs/${jobId}/deactivate`, {}, { showToast: true })
 }
+
+// Approve job (for pending jobs)
+export const approveJob = async (jobId) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/approve`, {}, { showToast: true })
+}
+
+// Reject job (for pending jobs)
+export const rejectJob = async (jobId) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, {}, { showToast: true })
+}
