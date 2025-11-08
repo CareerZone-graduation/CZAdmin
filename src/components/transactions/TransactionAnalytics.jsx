@@ -15,6 +15,7 @@ import {
   getTransactionToday, 
   getTopSpendingUsers 
 } from '@/services/analyticsService';
+import { exportAnalyticsToExcel, exportTopUsersToExcel } from '@/utils/exportToExcel';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -25,7 +26,8 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/utils/formatDate';
@@ -58,29 +60,40 @@ const MetricCard = ({
     );
   }
 
+  // Determine gradient color based on card type (you can customize this logic)
+  const getGradient = () => {
+    if (title.includes('Doanh thu')) return 'bg-gradient-to-br from-green-500 to-green-600';
+    if (title.includes('Tổng')) return 'bg-gradient-to-br from-blue-500 to-blue-600';
+    if (title.includes('Thành công')) return 'bg-gradient-to-br from-emerald-500 to-emerald-600';
+    if (title.includes('Xu')) return 'bg-gradient-to-br from-purple-500 to-purple-600';
+    if (title.includes('xử lý')) return 'bg-gradient-to-br from-yellow-500 to-yellow-600';
+    if (title.includes('Thất bại')) return 'bg-gradient-to-br from-red-500 to-red-600';
+    return 'bg-gradient-to-br from-indigo-500 to-indigo-600';
+  };
+
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+    <Card className={`${getGradient()} border-0 shadow-lg rounded-2xl hover:shadow-xl transition-shadow ${className}`}>
+      <CardContent className="p-5 text-center">
+        <div className="flex justify-center mb-2">
+          <Icon className="w-7 h-7 text-white/90" />
+        </div>
+        <div className="text-3xl font-bold text-white mb-1">{value}</div>
+        <div className="flex items-center justify-center gap-1 text-xs text-white/80">
           {trend && trendValue !== undefined && (
             <>
               {trend === 'up' ? (
-                <ArrowUpRight className="h-3 w-3 text-green-500" />
+                <ArrowUpRight className="h-3 w-3 text-white" />
               ) : (
-                <ArrowDownRight className="h-3 w-3 text-red-500" />
+                <ArrowDownRight className="h-3 w-3 text-white" />
               )}
-              <span className={trend === 'up' ? 'text-green-500' : 'text-red-500'}>
+              <span className="text-white font-semibold">
                 {Math.abs(trendValue)}%
               </span>
             </>
           )}
-          <span>{description}</span>
+          <span className="font-medium">{description}</span>
         </div>
+        <div className="text-xs text-white/70 mt-1 uppercase tracking-wide">{title}</div>
       </CardContent>
     </Card>
   );
@@ -172,6 +185,56 @@ export const TransactionAnalytics = () => {
     );
   }
 
+  const handleExportAnalytics = () => {
+    try {
+      if (!analyticsData) {
+        toast.warning('Không có dữ liệu để xuất');
+        return;
+      }
+      
+      console.log('Exporting analytics data...');
+      const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
+      
+      const result = exportAnalyticsToExcel(analyticsData, 'Phan_tich_giao_dich');
+      
+      toast.dismiss(loadingToast);
+      
+      if (result) {
+        toast.success('Xuất Excel thành công! Kiểm tra thư mục Downloads của bạn.', {
+          duration: 5000
+        });
+      }
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Lỗi khi xuất Excel: ' + err.message);
+    }
+  };
+
+  const handleExportTopUsers = () => {
+    try {
+      if (!topUsers || topUsers.length === 0) {
+        toast.warning('Không có dữ liệu người dùng để xuất');
+        return;
+      }
+      
+      console.log('Exporting top users, count:', topUsers.length);
+      const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
+      
+      const result = exportTopUsersToExcel(topUsers, 'Top_nguoi_dung_chi_tieu');
+      
+      toast.dismiss(loadingToast);
+      
+      if (result) {
+        toast.success('Xuất Excel thành công! Kiểm tra thư mục Downloads của bạn.', {
+          duration: 5000
+        });
+      }
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Lỗi khi xuất Excel: ' + err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -182,39 +245,14 @@ export const TransactionAnalytics = () => {
             Theo dõi và phân tích các giao dịch trong hệ thống
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label htmlFor="analytics-period" className="text-sm font-medium">
-              Khoảng thời gian:
-            </label>
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger id="analytics-period" className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">7 ngày</SelectItem>
-                <SelectItem value="30d">30 ngày</SelectItem>
-                <SelectItem value="90d">3 tháng</SelectItem>
-                <SelectItem value="1y">1 năm</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label htmlFor="granularity" className="text-sm font-medium">
-              Chi tiết:
-            </label>
-            <Select value={granularity} onValueChange={setGranularity}>
-              <SelectTrigger id="granularity" className="w-[100px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Ngày</SelectItem>
-                <SelectItem value="weekly">Tuần</SelectItem>
-                <SelectItem value="monthly">Tháng</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleExportAnalytics}
+          disabled={loading || !analyticsData}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Xuất Excel
+        </Button>
       </div>
       
 
@@ -327,24 +365,15 @@ export const TransactionAnalytics = () => {
               Xếp hạng người dùng có tổng chi tiêu cao nhất
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="top-users-period" className="text-sm font-medium">
-                Khoảng thời gian:
-              </label>
-              <Select value={topUsersPeriod} onValueChange={setTopUsersPeriod}>
-                <SelectTrigger id="top-users-period" className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7d">7 ngày</SelectItem>
-                  <SelectItem value="30d">30 ngày</SelectItem>
-                  <SelectItem value="90d">3 tháng</SelectItem>
-                  <SelectItem value="1y">1 năm</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleExportTopUsers}
+            disabled={loading || !topUsers || topUsers.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Xuất Excel
+          </Button>
         </div>
         <TopUsersTable users={topUsers} loading={loading} period={topUsersPeriod} />
       </div>

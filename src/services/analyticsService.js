@@ -80,3 +80,11 @@ export const getTopSpendingUsers = (params = {}) => {
 export const getTransactionsList = (params) => {
   return apiClient.get('/analytics/transactions', { params });
 };
+
+/**
+ * GET /api/analytics/kpi-metrics
+ * Fetches KPI business metrics from real MongoDB data.
+ */
+export const getKPIMetrics = () => {
+  return apiClient.get('/analytics/kpi-metrics');
+};

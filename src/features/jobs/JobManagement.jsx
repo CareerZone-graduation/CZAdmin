@@ -82,41 +82,37 @@ export function JobManagement() {
       setLoading(true);
       await updateJobStatus(jobId, newStatus);
       
-      // Update local state
-      setJobs(prev => prev.map(job => 
-        job._id === jobId ? { ...job, status: newStatus } : job
-      ));
-      
       const statusMessages = {
         active: 'Đã phê duyệt công việc',
         inactive: 'Đã từ chối công việc',
         pending: 'Đã đưa công việc về trạng thái chờ duyệt'
       };
       toast.success(statusMessages[newStatus] || 'Đã cập nhật trạng thái công việc');
+      
+      // Refresh danh sách công việc từ server để cập nhật số liệu
+      await fetchJobs();
     } catch (error) {
       toast.error(error.message || 'Không thể cập nhật trạng thái công việc');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchJobs]);
 
   const handleActivateJob = useCallback(async (jobId) => {
     try {
       setLoading(true);
       await activateJob(jobId);
       
-      // Update local state
-      setJobs(prev => prev.map(job => 
-        job._id === jobId ? { ...job, status: 'ACTIVE', approved: true } : job
-      ));
-      
       toast.success('Đã kích hoạt lại công việc');
+      
+      // Refresh danh sách công việc từ server để cập nhật số liệu
+      await fetchJobs();
     } catch (error) {
       toast.error(error.message || 'Không thể kích hoạt lại công việc');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchJobs]);
 
   const handleDeactivateJob = useCallback(async (jobId) => {
     try {
@@ -218,47 +214,50 @@ export function JobManagement() {
             <JobListSkeleton />
           ) : error ? (
             <div className="text-center py-8">
-              <div className="text-red-500 mb-2">{error}</div>
+              <div className="text-red-700 mb-2">{error}</div>
               <Button onClick={() => fetchJobs()} variant="outline">
                 Thử lại
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {jobs.map((job) => (
-                <Card key={job._id} className="border border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <img
-                          src={job.recruiterProfileId?.company?.logo || '/placeholder-logo.png'}
-                          alt={job.recruiterProfileId?.company?.name || 'Company Logo'}
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
+                <Card key={job._id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                  <CardContent className="p-8">
+                    <div className="flex items-start justify-between gap-10">
+                      <div className="flex items-start gap-6 flex-1">
+                        <div className="flex-shrink-0">
+                          <img
+                            src={job.recruiterProfileId?.company?.logo || '/placeholder-logo.png'}
+                            alt={job.recruiterProfileId?.company?.name || 'Company Logo'}
+                            className="w-35 h-20 rounded-lg object-contain border-2 border-gray-300 p-3 bg-white"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="text-lg font-semibold">{job.title}</h3>
+                          <div className="flex items-center gap-4 mb-4">
+                            <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
                             {getStatusBadge(job.status)}
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500 mb-3">
-                            <div className="flex items-center space-x-2">
-                              <Building2 className="w-4 h-4" />
+                          <div className="space-y-3 mb-4">
+                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                              <Building2 className="w-4 h-4 flex-shrink-0" />
                               <span>{job.recruiterProfileId?.company?.name || 'N/A'}</span>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 text-xs text-gray-400">
-                            <Calendar className="w-3 h-3" />
+                          <div className="flex items-center gap-2 text-xs text-gray-400 mt-4">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
                             <span>Đăng ngày {new Date(job.createdAt).toLocaleDateString('vi-VN')}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleViewJob(job._id)}
+                          className="whitespace-nowrap px-4 py-2"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
+                          <Eye className="w-4 h-4 mr-2" />
                           Xem
                         </Button>
                         {job.status === 'PENDING' && (
@@ -266,10 +265,10 @@ export function JobManagement() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusChange(job._id, 'ACTIVE')}
-                              className="bg-green-600 hover:bg-green-700"
+                              className="bg-green-600 hover:bg-green-700 whitespace-nowrap px-4 py-2"
                               disabled={loading}
                             >
-                              <Check className="w-4 h-4 mr-1" />
+                              <Check className="w-4 h-4 mr-2" />
                               Phê duyệt
                             </Button>
                             <Button
@@ -277,8 +276,9 @@ export function JobManagement() {
                               variant="destructive"
                               onClick={() => handleStatusChange(job._id, 'INACTIVE')}
                               disabled={loading}
+                              className="whitespace-nowrap px-4 py-2"
                             >
-                              <X className="w-4 h-4 mr-1" />
+                              <X className="w-4 h-4 mr-2" />
                               Từ chối
                             </Button>
                           </>
@@ -289,6 +289,7 @@ export function JobManagement() {
                             variant="outline"
                             onClick={() => handleDeactivateJob(job._id)}
                             disabled={loading}
+                            className="whitespace-nowrap px-4 py-2"
                           >
                             Vô hiệu hóa
                           </Button>
@@ -296,11 +297,11 @@ export function JobManagement() {
                         {job.status === 'INACTIVE' && (
                           <Button
                             size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap px-4 py-2"
                             onClick={() => handleActivateJob(job._id)}
                             disabled={loading}
                           >
-                            <Check className="w-4 h-4 mr-1" />
+                            <Check className="w-4 h-4 mr-2" />
                             Kích hoạt lại
                           </Button>
                         )}

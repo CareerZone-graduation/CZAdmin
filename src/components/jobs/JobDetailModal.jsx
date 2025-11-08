@@ -119,9 +119,9 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
     };
     
     if (minSalary && maxSalary) {
-      return `${formatNumber(minSalary)} - ${formatNumber(maxSalary)} USD`;
+      return `${formatNumber(minSalary)} - ${formatNumber(maxSalary)} VNĐ`;
     }
-    return `${formatNumber(minSalary || maxSalary)} USD`;
+    return `${formatNumber(minSalary || maxSalary)} VNĐ`;
   };
 
   if (loading) {

@@ -9,7 +9,7 @@ export const TRANSLATIONS = {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     sort: 'Sắp xếp',
-    export: 'Xuất dữ liệu',
+   
     refresh: 'Làm mới',
     loading: 'Đang tải...',
     save: 'Lưu',
@@ -24,7 +24,7 @@ export const TRANSLATIONS = {
     actions: 'Hành động',
     status: 'Trạng thái',
     dateRange: 'Khoảng thời gian',
-    filters: 'Bộ lọc',
+   
   },
 
   // Sidebar Navigation
@@ -74,12 +74,6 @@ export const TRANSLATIONS = {
     apiCallsToday: 'Lượt gọi API Hôm nay',
     avgResponse: 'Thời gian phản hồi TB',
     errorRate: 'Tỷ lệ Lỗi',
-    trafficSources: 'Nguồn Lưu lượng',
-    howUsersFindPlatform: 'Cách người dùng tìm thấy nền tảng của bạn',
-    directTraffic: 'Truy cập Trực tiếp',
-    searchEngines: 'Công cụ Tìm kiếm',
-    socialMedia: 'Mạng xã hội',
-    referrals: 'Giới thiệu',
     databasePerformance: 'Hiệu suất Cơ sở dữ liệu',
     databaseHealth: 'Hiệu suất truy vấn và tình trạng cơ sở dữ liệu',
     queryResponseTime: 'Thời gian Phản hồi Truy vấn',

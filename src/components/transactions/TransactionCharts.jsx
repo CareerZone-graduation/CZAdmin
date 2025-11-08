@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from '@/components/ui/skeleton';
 import { getTransactionTrends } from '@/services/analyticsService';
 import { formatDate } from '@/utils/formatDate';
@@ -31,14 +40,41 @@ export const RevenueOverTimeChart = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ period: '7d', granularity: 'daily' });
+
+  // Tính toán ngày mặc định: từ đầu tháng hiện tại đến hôm nay
+  const getDefaultDateRange = () => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { startDate: firstDayOfMonth, endDate: now };
+  };
+
+  const defaultRange = getDefaultDateRange();
+  const [filters, setFilters] = useState({
+    period: '30d',  // Giữ lại để fallback
+    granularity: 'daily',
+    startDate: defaultRange.startDate,
+    endDate: defaultRange.endDate
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await getTransactionTrends(filters);
+
+        // Tạo params với custom dates
+        const params = {
+          granularity: filters.granularity
+        };
+
+        if (filters.startDate && filters.endDate) {
+          params.customStartDate = filters.startDate.toISOString();
+          params.customEndDate = filters.endDate.toISOString();
+        } else {
+          params.period = filters.period;
+        }
+
+        const response = await getTransactionTrends(params);
         if (response.data.success) {
           // Directly use the data from the API as the backend now provides complete data
           setData(response.data.data.revenueOverTime);
@@ -69,6 +105,7 @@ export const RevenueOverTimeChart = () => {
       </Card>
     );
   }
+  
 
   if (error) {
     return (
@@ -94,29 +131,51 @@ export const RevenueOverTimeChart = () => {
             <CardTitle>Xu hướng Doanh thu</CardTitle>
             <CardDescription>Doanh thu theo thời gian</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Select value={filters.period} onValueChange={(value) => setFilters({ ...filters, period: value })}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">7 ngày</SelectItem>
-                <SelectItem value="30d">30 ngày</SelectItem>
-                <SelectItem value="90d">90 ngày</SelectItem>
-                <SelectItem value="1y">1 năm</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.granularity} onValueChange={(value) => setFilters({ ...filters, granularity: value })}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Ngày</SelectItem>
-                <SelectItem value="weekly">Tuần</SelectItem>
-                <SelectItem value="monthly">Tháng</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+         <div className="flex gap-2 items-center">
+           {/* Chọn ngày bắt đầu */}
+           <Popover>
+             <PopoverTrigger asChild>
+               <Button variant="outline" className="text-sm flex items-center gap-2">
+                 <CalendarIcon className="w-4 h-4" />
+                 {filters.startDate ? format(filters.startDate, "dd/MM/yyyy") : "Ngày bắt đầu"}
+               </Button>
+             </PopoverTrigger>
+             <PopoverContent className="p-0" align="start">
+               <Calendar
+                 mode="single"
+                 selected={filters.startDate}
+                 onSelect={(date) => {
+                   if (date) {
+                     setFilters(f => ({ ...f, startDate: date }));
+                   }
+                 }}
+                 initialFocus
+               />
+             </PopoverContent>
+           </Popover>
+
+           {/* Chọn ngày kết thúc */}
+           <Popover>
+             <PopoverTrigger asChild>
+               <Button variant="outline" className="text-sm flex items-center gap-2">
+                 <CalendarIcon className="w-4 h-4" />
+                 {filters.endDate ? format(filters.endDate, "dd/MM/yyyy") : "Ngày kết thúc"}
+               </Button>
+             </PopoverTrigger>
+             <PopoverContent className="p-0" align="start">
+               <Calendar
+                 mode="single"
+                 selected={filters.endDate}
+                 onSelect={(date) => {
+                   if (date) {
+                     setFilters(f => ({ ...f, endDate: date }));
+                   }
+                 }}
+                 initialFocus
+               />
+             </PopoverContent>
+           </Popover>
+         </div>
         </div>
       </CardHeader>
       <CardContent>

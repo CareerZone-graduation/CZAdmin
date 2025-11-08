@@ -57,6 +57,14 @@ export const getSystemStats = () => {
 };
 
 /**
+ * Lấy thống kê công ty (total, pending, approved, rejected, verified).
+ * @returns {Promise<import('axios').AxiosResponse<any>>}
+ */
+export const getCompanyStats = () => {
+  return apiClient.get('/analytics/company-stats');
+};
+
+/**
  * Lấy danh sách jobs của công ty
  * @param {string} companyId - Company ID (RecruiterProfile ID)
  * @param {Object} params - Query parameters

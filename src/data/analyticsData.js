@@ -75,65 +75,6 @@ export const monthlyMetrics = {
   }
 };
 
-// Recent activity with more detailed data
-export const enhancedRecentActivity = [
-  {
-    id: 1,
-    type: 'company_approval',
-    title: 'Company Verification Request',
-    message: 'StartupIO submitted company verification documents',
-    time: '2 hours ago',
-    status: 'pending',
-    priority: 'high',
-    user: 'John Smith',
-    company: 'StartupIO',
-    action_required: true
-  },
-  {
-    id: 2,
-    type: 'job_posting',
-    title: 'New Job Posted',
-    message: 'Senior Frontend Developer position posted by TechCorp',
-    time: '4 hours ago',
-    status: 'active',
-    priority: 'medium',
-    user: 'Sarah Johnson',
-    company: 'TechCorp',
-    action_required: false
-  },
-  {
-    id: 3,
-    type: 'user_registration',
-    title: 'User Registration Spike',
-    message: '15 new user registrations today - 20% increase',
-    time: '6 hours ago',
-    status: 'info',
-    priority: 'low',
-    action_required: false
-  },
-  {
-    id: 4,
-    type: 'payment',
-    title: 'Payment Received',
-    message: '$1,250 payment received from TechCorp Solutions',
-    time: '1 day ago',
-    status: 'completed',
-    priority: 'medium',
-    company: 'TechCorp Solutions',
-    amount: 1250,
-    action_required: false
-  },
-  {
-    id: 5,
-    type: 'security',
-    title: 'Security Alert',
-    message: '3 failed login attempts detected for admin account',
-    time: '2 days ago',
-    status: 'warning',
-    priority: 'high',
-    action_required: true
-  }
-];
 
 // System health metrics
 export const systemHealth = {
@@ -154,41 +95,6 @@ export const trafficSources = [
   { name: 'Referrals', value: 10, color: '#EF4444' }
 ];
 
-// Top performing companies
-export const topCompanies = [
-  {
-    name: 'TechCorp Solutions',
-    jobs: 45,
-    applications: 1234,
-    views: 5678,
-    revenue: 5500,
-    rating: 4.8
-  },
-  {
-    name: 'StartupIO',
-    jobs: 32,
-    applications: 987,
-    views: 4321,
-    revenue: 3800,
-    rating: 4.6
-  },
-  {
-    name: 'Digital Dynamics',
-    jobs: 28,
-    applications: 756,
-    views: 3456,
-    revenue: 3200,
-    rating: 4.7
-  },
-  {
-    name: 'Innovation Labs',
-    jobs: 23,
-    applications: 654,
-    views: 2987,
-    revenue: 2750,
-    rating: 4.5
-  }
-];
 
 // Key performance indicators
 export const kpiData = [
@@ -215,7 +121,7 @@ export const kpiData = [
   },
   {
     title: 'Platform Revenue',
-    value: '$24.7K',
+    value: '24.7 triệu VNĐ',
     change: '+23%',
     trend: 'up',
     description: 'Monthly recurring revenue'

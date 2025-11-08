@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { industryEnum } from '@/lib/schemas';
 import { toast } from 'sonner';
-import { getAllCompaniesForAdmin, getSystemStats, approveCompany, rejectCompany, getCompanyProfile } from '@/services/companyService';
+import { getAllCompaniesForAdmin, getSystemStats, getCompanyStats, approveCompany, rejectCompany, getCompanyProfile } from '@/services/companyService';
 
 export function EnhancedCompanyManagement() {
   const [companies, setCompanies] = useState([]);
@@ -115,20 +115,22 @@ export function EnhancedCompanyManagement() {
 
     const fetchStats = async () => {
       try {
-        const statsResponse = await getSystemStats();
+        console.log('📊 Fetching initial company stats...');
+        const statsResponse = await getCompanyStats();
+        console.log('📊 Initial stats response:', statsResponse.data);
         if (statsResponse && statsResponse.data?.success) {
-          const companyStats = statsResponse.data.data.companies;
+          const companyStats = statsResponse.data.data;
+          console.log('✅ Initial stats loaded:', companyStats);
           setStats({
             total: companyStats?.total ?? 0,
             pending: companyStats?.pending ?? 0,
-            // NOTE: The new /admin/stats endpoint does not provide 'approved' or 'rejected' counts for companies.
-            approved: 0,
-            rejected: 0,
+            approved: companyStats?.approved ?? 0,
+            rejected: companyStats?.rejected ?? 0,
             verified: companyStats?.verified ?? 0,
           });
         }
       } catch (error) {
-        console.error("Failed to fetch stats:", error);
+        console.error("❌ Failed to fetch stats:", error);
         toast.error("Could not load statistics.");
       }
     };
@@ -138,7 +140,7 @@ export function EnhancedCompanyManagement() {
   }, [searchTerm, statusFilter, industryFilter, sortOption, currentPage]);
 
   // Get status badge styling
-  const getStatusBadge = (status, verified) => {
+  const getStatusBadge = (status) => {
     const statusStyles = {
       pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock, label: t('companies.statusPending') },
       approved: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle, label: t('companies.statusApproved') },
@@ -149,18 +151,10 @@ export function EnhancedCompanyManagement() {
     const Icon = style.icon;
     
     return (
-      <div className="flex items-center space-x-2">
-        <Badge className={`${style.bg} ${style.text} flex items-center space-x-1`}>
-          <Icon className="w-3 h-3" />
-          <span className="capitalize">{style.label}</span>
-        </Badge>
-        {verified && (
-          <Badge className="bg-blue-100 text-blue-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            {t('companies.verified')}
-          </Badge>
-        )}
-      </div>
+      <Badge className={`${style.bg} ${style.text} flex items-center space-x-1`}>
+        <Icon className="w-3 h-3" />
+        <span className="capitalize">{style.label}</span>
+      </Badge>
     );
   };
 
@@ -197,6 +191,26 @@ export function EnhancedCompanyManagement() {
       ));
       const actionText = action === 'approved' ? 'approved' : 'rejected';
       toast.success(res.data?.message || `Company ${actionText} successfully.`);
+      
+      // Refresh stats after action
+      try {
+        console.log('🔄 Refreshing company stats after action...');
+        const statsResponse = await getCompanyStats();
+        console.log('📊 Stats response:', statsResponse.data);
+        if (statsResponse && statsResponse.data?.success) {
+          const companyStats = statsResponse.data.data;
+          console.log('✅ Updated stats:', companyStats);
+          setStats({
+            total: companyStats?.total ?? 0,
+            pending: companyStats?.pending ?? 0,
+            approved: companyStats?.approved ?? 0,
+            rejected: companyStats?.rejected ?? 0,
+            verified: companyStats?.verified ?? 0,
+          });
+        }
+      } catch (error) {
+        console.error("❌ Failed to refresh stats:", error);
+      }
     } catch (error) {
       toast.error(`Failed to ${action} company.`);
       console.error(`Failed to ${action} company:`, error);
@@ -260,7 +274,7 @@ export function EnhancedCompanyManagement() {
           </div>
           <div>
             <span className="text-xl font-semibold">{company.name}</span>
-            {getStatusBadge(company.status, company.verified)}
+            {getStatusBadge(company.status)}
           </div>
         </DialogTitle>
         <DialogDescription>
@@ -379,10 +393,7 @@ export function EnhancedCompanyManagement() {
           <p className="text-gray-600">{t('companies.description')}</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            {t('common.export')}
-          </Button>
+          
           {bulkSelection.size > 0 && (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">{bulkSelection.size} {t('companies.selected')}</span>
@@ -397,36 +408,42 @@ export function EnhancedCompanyManagement() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-600">{t('companies.totalCompanies')}</div>
+      {/* Stats Overview - Colorful Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg rounded-2xl">
+          <CardContent className="p-5 text-center">
+            <div className="flex justify-center mb-2">
+              <Building2 className="w-8 h-8 text-white/90" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.total}</div>
+            <div className="text-sm text-white/80 font-medium">{t('companies.totalCompanies')}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">{t('companies.pendingReview')}</div>
+        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 border-0 shadow-lg rounded-2xl">
+          <CardContent className="p-5 text-center">
+            <div className="flex justify-center mb-2">
+              <Clock className="w-8 h-8 text-white/90" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.pending}</div>
+            <div className="text-sm text-white/80 font-medium">{t('companies.pendingReview')}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-gray-600">{t('companies.approved')}</div>
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg rounded-2xl">
+          <CardContent className="p-5 text-center">
+            <div className="flex justify-center mb-2">
+              <CheckCircle className="w-8 h-8 text-white/90" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.approved}</div>
+            <div className="text-sm text-white/80 font-medium">{t('companies.approved')}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-            <div className="text-sm text-gray-600">{t('companies.rejected')}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.verified}</div>
-            <div className="text-sm text-gray-600">{t('companies.verified')}</div>
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 border-0 shadow-lg rounded-2xl">
+          <CardContent className="p-5 text-center">
+            <div className="flex justify-center mb-2">
+              <XCircle className="w-8 h-8 text-white/90" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.rejected}</div>
+            <div className="text-sm text-white/80 font-medium">{t('companies.rejected')}</div>
           </CardContent>
         </Card>
       </div>
@@ -530,7 +547,7 @@ export function EnhancedCompanyManagement() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold">{company.name}</h3>
-                          {getStatusBadge(company.status, company.verified)}
+                          {getStatusBadge(company.status)}
                         </div>
                         
                         <p className="text-gray-600 mb-3 line-clamp-2">{company.description}</p>

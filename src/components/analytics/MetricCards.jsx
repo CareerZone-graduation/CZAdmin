@@ -16,42 +16,53 @@ import {
   BarChart3,
   Globe
 } from 'lucide-react';
-import { getDashboardStats } from '@/services/analyticsService';
-import { kpiData, systemHealth } from '@/data/analyticsData'; // Keep these for now, will be replaced later
+import { getDashboardStats, getKPIMetrics } from '@/services/analyticsService';
+import { systemHealth } from '@/data/analyticsData'; // Will be deprecated
 import { Skeleton } from '@/components/ui/skeleton';
 import { t } from '@/constants/translations';
 
-// Enhanced Metric Card Component
+// Enhanced Metric Card Component with gradient backgrounds
 const MetricCard = ({ title, value, change, trend, icon: Icon, description, color = "blue" }) => {
+  // Gradient backgrounds cho từng màu
   const colorClasses = {
-    blue: "text-blue-600 bg-blue-50",
-    green: "text-green-600 bg-green-50",
-    orange: "text-orange-600 bg-orange-50",
-    purple: "text-purple-600 bg-purple-50",
-    red: "text-red-600 bg-red-50",
-    indigo: "text-indigo-600 bg-indigo-50"
+    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
+    green: "bg-gradient-to-br from-green-500 to-green-600 text-white",
+    orange: "bg-gradient-to-br from-orange-500 to-orange-600 text-white",
+    purple: "bg-gradient-to-br from-purple-500 to-purple-600 text-white",
+    red: "bg-gradient-to-br from-red-500 to-red-600 text-white",
+    indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white"
   };
 
-  const trendColor = trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600';
+  // Icon background với màu trắng nhạt
+  const iconBgClasses = {
+    blue: "bg-white/20",
+    green: "bg-white/20",
+    orange: "bg-white/20",
+    purple: "bg-white/20",
+    red: "bg-white/20",
+    indigo: "bg-white/20"
+  };
+
+  const trendColor = trend === 'up' ? 'text-white/90' : trend === 'down' ? 'text-white/90' : 'text-white/80';
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown;
 
   return (
-    <Card className="relative overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-gray-700">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-4 w-4" />
+    <Card className={`relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-shadow duration-300 ${colorClasses[color]} rounded-2xl`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-xs font-medium text-white/80 uppercase tracking-wide">{title}</CardTitle>
+        <div className={`p-3 rounded-xl ${iconBgClasses[color]} backdrop-blur-sm`}>
+          <Icon className="h-6 w-6 text-white" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className={`flex items-center text-xs ${trendColor} mt-1`}>
-          <TrendIcon className="w-3 h-3 mr-1" />
+      <CardContent className="pb-5">
+        <div className="text-4xl font-bold text-white mb-2 tracking-tight">{value}</div>
+        <div className={`flex items-center text-sm ${trendColor} font-medium`}>
+          <TrendIcon className="w-4 h-4 mr-1" />
           {change}
-          {description && <span className="text-gray-500 ml-1">{t('dashboard.fromLastMonth')}</span>}
+          {description && <span className="text-white/70 ml-1 text-xs">{t('dashboard.fromLastMonth')}</span>}
         </div>
         {description && (
-          <p className="text-xs text-gray-500 mt-2">{description}</p>
+          <p className="text-xs text-white/70 mt-2">{description}</p>
         )}
       </CardContent>
     </Card>
@@ -118,13 +129,100 @@ export const SystemHealthCard = () => {
   );
 };
 
-// KPI Cards Grid
+// KPI Cards Grid - Updated to use real data from MongoDB
 export const KPICards = () => {
+  const [kpiData, setKpiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchKPIData = async () => {
+      try {
+        setLoading(true);
+        const response = await getKPIMetrics();
+        const data = response.data.data;
+        
+        // Transform API response to component format
+        const formattedKPI = [
+          {
+            title: 'Tỷ lệ ứng tuyển thành công',
+            value: data.applicationSuccessRate.value,
+            change: data.applicationSuccessRate.change,
+            trend: data.applicationSuccessRate.trend,
+            description: data.applicationSuccessRate.description
+          },
+          {
+            title: 'Thời gian tuyển dụng TB',
+            value: data.averageTimeToHire.value,
+            change: data.averageTimeToHire.change,
+            trend: data.averageTimeToHire.trend,
+            description: data.averageTimeToHire.description
+          },
+          {
+            title: 'Tương tác người dùng',
+            value: data.userEngagement.value,
+            change: data.userEngagement.change,
+            trend: data.userEngagement.trend,
+            description: data.userEngagement.description
+          },
+          {
+            title: 'Doanh thu nền tảng',
+            value: data.platformRevenue.value,
+            change: data.platformRevenue.change,
+            trend: data.platformRevenue.trend,
+            description: data.platformRevenue.description
+          }
+        ];
+        
+        setKpiData(formattedKPI);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching KPI metrics:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKPIData();
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-24 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="col-span-4">
+        <CardContent className="pt-6">
+          <p className="text-red-600">Lỗi khi tải dữ liệu KPI: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!kpiData) return null;
+
+  const icons = [Target, Clock, Users, DollarSign];
+  const colors = ['blue', 'green', 'purple', 'orange'];
+
   return (
     <>
       {kpiData.map((kpi, index) => {
-        const icons = [Target, Clock, Users, DollarSign];
-        const colors = ['blue', 'green', 'purple', 'orange'];
         const Icon = icons[index % icons.length];
         
         return (
@@ -184,7 +282,7 @@ export const EnhancedStatsCards = () => {
           },
           {
             title: t('dashboard.monthlyRevenue'),
-            value: `$${data.monthlyRevenue.toLocaleString()}`,
+            value: `${data.monthlyRevenue.toLocaleString()} VNĐ`,
             change: `${data.growth.revenue >= 0 ? '+' : ''}${data.growth.revenue}%`,
             trend: data.growth.revenue >= 0 ? 'up' : 'down',
             icon: DollarSign,

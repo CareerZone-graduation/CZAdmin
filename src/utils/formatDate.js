@@ -1,9 +1,26 @@
-export const formatDate = (date) => {
-  return new Date(date).toLocaleDateString("en-US", {
+export const formatDate = (date, format = 'default') => {
+  if (!date) return 'N/A';
+  
+  const dateObj = new Date(date);
+  
+  if (format === 'date-only') {
+    // Format: DD/MM/YYYY
+    return dateObj.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+  
+  // Default format with time
+  return dateObj.toLocaleString("vi-VN", {
     year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export const formatDateTime = (date) => {

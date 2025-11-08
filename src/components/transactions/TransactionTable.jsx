@@ -65,9 +65,9 @@ const TransactionDetailModal = ({ transaction }) => {
       <DialogHeader>
         <DialogTitle>Chi tiết Giao dịch</DialogTitle>
       </DialogHeader>
-      <div className="space-y-6">
+      <div className="space-y-8 py-4">
         {/* Transaction Info */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-muted-foreground">Mã giao dịch</Label>
             <p className="font-mono text-sm">{transaction.transactionCode}</p>
@@ -98,9 +98,9 @@ const TransactionDetailModal = ({ transaction }) => {
 
         {/* User Info */}
         {transaction.user && (
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Thông tin Người dùng</h4>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="border-t pt-6">
+            <h4 className="font-medium mb-4">Thông tin Người dùng</h4>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground">Email</Label>
                 <p>{transaction.user.email}</p>
