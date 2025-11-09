@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob } from '@/services/jobService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
 import { Pagination } from '@/components/common/Pagination';
@@ -132,6 +132,42 @@ export function JobManagement() {
     }
   }, []);
 
+  const handleApproveJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      await approveJob(jobId);
+      
+      // Update local state
+      setJobs(prev => prev.map(job => 
+        job._id === jobId ? { ...job, approved: true } : job
+      ));
+      
+      toast.success('Đã phê duyệt công việc');
+    } catch (error) {
+      toast.error(error.message || 'Không thể phê duyệt công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleRejectJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      await rejectJob(jobId);
+      
+      // Update local state
+      setJobs(prev => prev.map(job => 
+        job._id === jobId ? { ...job, approved: false, status: 'INACTIVE' } : job
+      ));
+      
+      toast.success('Đã từ chối công việc');
+    } catch (error) {
+      toast.error(error.message || 'Không thể từ chối công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleViewJob = (jobId) => {
     setSelectedJobId(jobId);
     setIsDetailModalOpen(true);
@@ -142,14 +178,19 @@ export function JobManagement() {
     setSelectedJobId(null);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, approved) => {
+    // If not approved, show pending badge regardless of status
+    if (approved === false) {
+      return <Badge className="bg-yellow-100 text-yellow-800">Chờ duyệt</Badge>;
+    }
+    
     switch (status) {
-      case 'active':
+      case 'ACTIVE':
         return <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>;
-      case 'inactive':
+      case 'INACTIVE':
         return <Badge variant="secondary">Không hoạt động</Badge>;
-      case 'pending':
-        return <Badge variant="outline">Chờ duyệt</Badge>;
+      case 'EXPIRED':
+        return <Badge className="bg-red-100 text-red-800">Hết hạn</Badge>;
       default:
         return null;
     }
@@ -192,6 +233,7 @@ export function JobManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="PENDING">Chờ duyệt</SelectItem>
                 <SelectItem value="ACTIVE">Hoạt động</SelectItem>
                 <SelectItem value="INACTIVE">Không hoạt động</SelectItem>
                 <SelectItem value="EXPIRED">Hết hạn</SelectItem>
@@ -234,9 +276,9 @@ export function JobManagement() {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-4 mb-4">
-                            <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
-                            {getStatusBadge(job.status)}
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold">{job.title}</h3>
+                            {getStatusBadge(job.status, job.approved)}
                           </div>
                           <div className="space-y-3 mb-4">
                             <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -260,12 +302,12 @@ export function JobManagement() {
                           <Eye className="w-4 h-4 mr-2" />
                           Xem
                         </Button>
-                        {job.status === 'PENDING' && (
+                        {job.approved === false && (
                           <>
                             <Button
                               size="sm"
-                              onClick={() => handleStatusChange(job._id, 'ACTIVE')}
-                              className="bg-green-600 hover:bg-green-700 whitespace-nowrap px-4 py-2"
+                              onClick={() => handleApproveJob(job._id)}
+                              className="bg-green-600 hover:bg-green-700"
                               disabled={loading}
                             >
                               <Check className="w-4 h-4 mr-2" />
@@ -274,7 +316,7 @@ export function JobManagement() {
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleStatusChange(job._id, 'INACTIVE')}
+                              onClick={() => handleRejectJob(job._id)}
                               disabled={loading}
                               className="whitespace-nowrap px-4 py-2"
                             >
@@ -283,7 +325,7 @@ export function JobManagement() {
                             </Button>
                           </>
                         )}
-                        {job.status === 'ACTIVE' && (
+                        {job.approved === true && job.status === 'ACTIVE' && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -294,7 +336,7 @@ export function JobManagement() {
                             Vô hiệu hóa
                           </Button>
                         )}
-                        {job.status === 'INACTIVE' && (
+                        {job.approved === true && job.status === 'INACTIVE' && (
                           <Button
                             size="sm"
                             className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap px-4 py-2"
