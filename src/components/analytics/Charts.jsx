@@ -523,7 +523,7 @@ export const JobCategoriesChart = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis type="number" stroke="#6b7280" fontSize={12} />
               <YAxis 
-                dataKey="name" 
+                dataKey="category" 
                 type="category" 
                 stroke="#6b7280" 
                 fontSize={11} 
@@ -531,7 +531,7 @@ export const JobCategoriesChart = () => {
                 tick={{ fill: '#374151' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
