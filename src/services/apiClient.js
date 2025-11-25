@@ -5,7 +5,7 @@ import { refreshToken } from './authService';
 import { toast } from 'sonner';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   timeout: 15000,
   withCredentials: false, // KHÔNG gửi cookie mặc định
 });
@@ -77,7 +77,7 @@ apiClient.interceptors.response.use(
       }
     }
     //luôn show toast nếu có lỗi
-    const errorMessage = response?.data?.message || error?.message + ' : '+ error.response.statusText|| 'Đã có lỗi xảy ra';
+    const errorMessage = response?.data?.message || error?.message || 'Đã có lỗi xảy ra';
     toast.error(errorMessage);
 
     return Promise.reject(error);

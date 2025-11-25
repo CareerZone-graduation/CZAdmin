@@ -36,6 +36,7 @@ export const TRANSLATIONS = {
     users: 'Người dùng',
     jobs: 'Công việc',
     transactions: 'Giao dịch',
+    support: 'Yêu cầu Hỗ trợ',
     notifications: 'Thông báo',
     settings: 'Cài đặt',
     logout: 'Đăng xuất',

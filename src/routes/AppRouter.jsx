@@ -11,6 +11,9 @@ import { UserManagementPage } from '@/pages/UserManagementPage';
 import { UserDetailPage } from '@/pages/UserDetailPage';
 import { JobManagementPage } from '@/pages/JobManagementPage';
 import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
+import { AdminSupportDashboard } from '@/pages/support/AdminSupportDashboard';
+import { AdminSupportRequestDetail } from '@/pages/support/AdminSupportRequestDetail';
+import { SupportAnalyticsPage } from '@/pages/support/SupportAnalyticsPage';
 
 function AppRouter() {
   const { initializing } = useSelector(state => state.auth);
@@ -71,6 +74,21 @@ function AppRouter() {
       <Route path="/transactions" element={
         <ProtectedRoute>
           <TransactionManagementPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/support" element={
+        <ProtectedRoute>
+          <AdminSupportDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/support/:id" element={
+        <ProtectedRoute>
+          <AdminSupportRequestDetail />
+        </ProtectedRoute>
+      } />
+      <Route path="/support/analytics" element={
+        <ProtectedRoute>
+          <SupportAnalyticsPage />
         </ProtectedRoute>
       } />
 

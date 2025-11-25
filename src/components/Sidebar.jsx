@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,13 @@ import {
   CreditCard, 
   LogOut,
   Settings,
-  Bell
+  Bell,
+  LifeBuoy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logoutUser } from '@/features/auth/authSlice';
 import { t } from '@/constants/translations';
+import { getAllSupportRequests } from '@/services/supportRequestService';
 
 const menuItems = [
   { id: 'dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard, path: '/dashboard' },
@@ -23,6 +25,7 @@ const menuItems = [
   { id: 'users', label: t('sidebar.users'), icon: Users, path: '/users' },
   { id: 'jobs', label: t('sidebar.jobs'), icon: Briefcase, path: '/jobs', badge: 1 },
   { id: 'transactions', label: t('sidebar.transactions'), icon: CreditCard, path: '/transactions' },
+  { id: 'support', label: t('sidebar.support'), icon: LifeBuoy, path: '/support', badgeKey: 'pendingSupport' },
 ];
 
 export function Sidebar({ className }) {
@@ -30,6 +33,28 @@ export function Sidebar({ className }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
+  const [pendingSupportCount, setPendingSupportCount] = useState(0);
+
+  // Fetch pending support requests count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await getAllSupportRequests({ status: 'pending' }, {}, { page: 1, limit: 1 });
+        if (response?.data?.pagination?.total) {
+          setPendingSupportCount(response.data.pagination.total);
+        }
+      } catch (error) {
+        console.error('Failed to fetch pending support requests count:', error);
+      }
+    };
+
+    fetchPendingCount();
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await dispatch(logoutUser());
@@ -41,6 +66,13 @@ export function Sidebar({ className }) {
   }, [navigate]);
 
   const isActive = (path) => location.pathname === path;
+  
+  const getBadgeValue = (item) => {
+    if (item.badgeKey === 'pendingSupport') {
+      return pendingSupportCount > 0 ? pendingSupportCount : null;
+    }
+    return item.badge;
+  };
 
   return (
     <div className={cn("w-64 bg-white border-r min-h-screen flex flex-col", className)}>
@@ -58,27 +90,30 @@ export function Sidebar({ className }) {
 
       <nav className="flex-1 p-4">
         <div className="space-y-1">
-          {menuItems.map((item) => (
-            <Button
-              key={item.id}
-              variant={isActive(item.path) ? 'default' : 'ghost'}
-              className={cn(
-                'w-full justify-start',
-                isActive(item.path) 
-                  ? 'bg-green-600 text-white hover:bg-green-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              )}
-              onClick={() => handleNavigation(item.path)}
-            >
-              <item.icon className="w-4 h-4 mr-3" />
-              {item.label}
-              {item.badge && (
-                <Badge variant="destructive" className="ml-auto text-xs">
-                  {item.badge}
-                </Badge>
-              )}
-            </Button>
-          ))}
+          {menuItems.map((item) => {
+            const badgeValue = getBadgeValue(item);
+            return (
+              <Button
+                key={item.id}
+                variant={isActive(item.path) ? 'default' : 'ghost'}
+                className={cn(
+                  'w-full justify-start',
+                  isActive(item.path) 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+                onClick={() => handleNavigation(item.path)}
+              >
+                <item.icon className="w-4 h-4 mr-3" />
+                {item.label}
+                {badgeValue && (
+                  <Badge variant="destructive" className="ml-auto text-xs">
+                    {badgeValue}
+                  </Badge>
+                )}
+              </Button>
+            );
+          })}
         </div>
       </nav>
 
