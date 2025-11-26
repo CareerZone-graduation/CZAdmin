@@ -5,7 +5,7 @@ import { refreshToken } from './authService';
 import { toast } from 'sonner';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 15000,
   withCredentials: false, // KHÔNG gửi cookie mặc định
 });
@@ -59,13 +59,13 @@ apiClient.interceptors.response.use(
       try {
         // Break the circular dependency by calling the refresh endpoint directly
         const refreshResponse = await refreshToken();
-        
+
         const { accessToken } = refreshResponse.data.data;
-        
+
         saveAccessToken(accessToken);
-        
+
         publishRefresh(accessToken);
-        
+
         config.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(config);
       } catch (refreshErr) {
