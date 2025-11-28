@@ -54,10 +54,7 @@ const TransactionDetailModal = ({ transaction }) => {
   if (!transaction) return null;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
   };
 
   return (
@@ -146,10 +143,7 @@ export const TransactionTable = ({
   const { currentPage = 1, totalPages = 1, totalItems = 0, limit = 10 } = pagination;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
   };
 
   if (error) {

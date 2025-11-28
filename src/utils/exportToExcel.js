@@ -20,7 +20,7 @@ export const exportTransactionsToExcel = (transactions, filename = 'Danh_sach_gi
     'Họ tên người giao dịch': transaction.user?.fullname || 'Chưa cập nhật',
     'Email': transaction.user?.email || 'N/A',
     'ID người dùng': transaction.user?._id || transaction.userId || 'N/A',
-    'Số tiền thanh toán (VND)': transaction.amountPaid || 0,
+    'Số tiền thanh toán (VNĐ)': transaction.amountPaid || 0,
     'Số xu nhận được': transaction.coinAmount || 0,
     'Phương thức thanh toán': getPaymentMethodLabel(transaction.paymentMethod),
     'Trạng thái': getStatusLabel(transaction.status),
@@ -82,13 +82,13 @@ export const exportAnalyticsToExcel = (analyticsData, filename = 'Phan_tich_giao
   if (analyticsData.summary) {
     const summaryData = [
       ['Chỉ số', 'Giá trị'],
-      ['Tổng doanh thu (VND)', analyticsData.summary.totalRevenue || 0],
+      ['Tổng doanh thu (VNĐ)', analyticsData.summary.totalRevenue || 0],
       ['Tổng giao dịch', analyticsData.summary.totalTransactions || 0],
       ['Giao dịch thành công', analyticsData.summary.successfulTransactions || 0],
       ['Giao dịch đang xử lý', analyticsData.summary.pendingTransactions || 0],
       ['Giao dịch thất bại', analyticsData.summary.failedTransactions || 0],
       ['Tỷ lệ thành công (%)', analyticsData.summary.successRate || 0],
-      ['Giá trị giao dịch trung bình (VND)', analyticsData.summary.averageTransactionValue || 0],
+      ['Giá trị giao dịch trung bình (VNĐ)', analyticsData.summary.averageTransactionValue || 0],
       ['Tổng xu được nạp', analyticsData.summary.totalCoinsRecharged || 0],
     ];
     const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
@@ -100,7 +100,7 @@ export const exportAnalyticsToExcel = (analyticsData, filename = 'Phan_tich_giao
   if (analyticsData.revenueOverTime && analyticsData.revenueOverTime.length > 0) {
     const revenueData = analyticsData.revenueOverTime.map(item => ({
       'Ngày': item.date,
-      'Doanh thu (VND)': item.revenue || 0,
+      'Doanh thu (VNĐ)': item.revenue || 0,
       'Số giao dịch': item.transactionCount || 0,
     }));
     const wsRevenue = XLSX.utils.json_to_sheet(revenueData);
@@ -112,7 +112,7 @@ export const exportAnalyticsToExcel = (analyticsData, filename = 'Phan_tich_giao
   if (analyticsData.revenueByRole && analyticsData.revenueByRole.length > 0) {
     const roleData = analyticsData.revenueByRole.map(item => ({
       'Vai trò': item.name,
-      'Doanh thu (VND)': item.value || 0,
+      'Doanh thu (VNĐ)': item.value || 0,
       'Số giao dịch': item.transactionCount || 0,
     }));
     const wsRole = XLSX.utils.json_to_sheet(roleData);
@@ -124,7 +124,7 @@ export const exportAnalyticsToExcel = (analyticsData, filename = 'Phan_tich_giao
   if (analyticsData.revenueByPaymentMethod && analyticsData.revenueByPaymentMethod.length > 0) {
     const paymentData = analyticsData.revenueByPaymentMethod.map(item => ({
       'Phương thức': item.name,
-      'Doanh thu (VND)': item.value || 0,
+      'Doanh thu (VNĐ)': item.value || 0,
       'Số giao dịch': item.transactionCount || 0,
     }));
     const wsPayment = XLSX.utils.json_to_sheet(paymentData);
@@ -174,9 +174,9 @@ export const exportTopUsersToExcel = (users, filename = 'Top_nguoi_dung_chi_tieu
     'Hạng': index + 1,
     'Email': user.email || '',
     'Vai trò': user.role || '',
-    'Tổng chi tiêu (VND)': user.totalSpent || 0,
+    'Tổng chi tiêu (VNĐ)': user.totalSpent || 0,
     'Số giao dịch': user.transactionCount || 0,
-    'Trung bình mỗi giao dịch (VND)': user.totalSpent && user.transactionCount 
+    'Trung bình mỗi giao dịch (VNĐ)': user.totalSpent && user.transactionCount 
       ? Math.round(user.totalSpent / user.transactionCount) 
       : 0,
   }));

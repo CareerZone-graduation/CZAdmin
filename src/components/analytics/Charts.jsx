@@ -23,7 +23,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {typeof entry.value === 'number' && entry.dataKey === 'revenue' 
-              ? `${entry.value.toLocaleString()} ₫` 
+              ? `${entry.value.toLocaleString()} VNĐ` 
               : entry.value.toLocaleString()}
           </p>
         ))}

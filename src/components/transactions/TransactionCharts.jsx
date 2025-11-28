@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {entry.dataKey === 'revenue' 
-              ? `${entry.value.toLocaleString()} VND` 
+              ? `${entry.value.toLocaleString()} VNĐ` 
               : entry.value.toLocaleString()}
           </p>
         ))}
@@ -96,7 +96,7 @@ export const RevenueOverTimeChart = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Xu hướng Doanh thu</CardTitle>
+          <CardTitle>Xu hướng doanh thu</CardTitle>
           <CardDescription>Doanh thu theo thời gian</CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,7 +111,7 @@ export const RevenueOverTimeChart = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Xu hướng Doanh thu</CardTitle>
+          <CardTitle>Xu hướng doanh thu</CardTitle>
           <CardDescription>Doanh thu theo thời gian</CardDescription>
         </CardHeader>
         <CardContent>
@@ -128,7 +128,7 @@ export const RevenueOverTimeChart = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Xu hướng Doanh thu</CardTitle>
+            <CardTitle>Xu hướng doanh thu</CardTitle>
             <CardDescription>Doanh thu theo thời gian</CardDescription>
           </div>
          <div className="flex gap-2 items-center">
@@ -265,7 +265,7 @@ export const RevenueByRoleChart = ({ data }) => {
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']}
+              formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Doanh thu']}
             />
             <Legend />
           </PieChart>
@@ -314,7 +314,7 @@ export const RevenueByPaymentMethodChart = ({ data }) => {
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
             />
             <Tooltip 
-              formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']}
+              formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Doanh thu']}
             />
             <Bar 
               dataKey="value" 
@@ -436,7 +436,7 @@ export const TopSpendingUsersChart = ({ data, limit = 5 }) => {
               width={90}
             />
             <Tooltip 
-              formatter={(value) => [`${value.toLocaleString()} VND`, 'Tổng chi tiêu']}
+              formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Tổng chi tiêu']}
             />
             <Bar 
               dataKey="totalSpent" 

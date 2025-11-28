@@ -8,23 +8,26 @@ import apiClient from './apiClient';
  * @returns {Promise} API response
  */
 export const getAllSupportRequests = async (filters = {}, sort = {}, pagination = {}) => {
-  const params = new URLSearchParams();
+  const params = {};
   
   // Filters
-  if (filters.status) params.append('status', filters.status);
-  if (filters.category) params.append('category', filters.category);
-  if (filters.priority) params.append('priority', filters.priority);
-  if (filters.userType) params.append('userType', filters.userType);
-  if (filters.keyword) params.append('keyword', filters.keyword);
-  if (filters.fromDate) params.append('fromDate', filters.fromDate);
-  if (filters.toDate) params.append('toDate', filters.toDate);
+  if (filters.status) params.status = filters.status;
+  if (filters.category) params.category = filters.category;
+  if (filters.priority) params.priority = filters.priority;
+  if (filters.userType) params.userType = filters.userType;
+  if (filters.keyword) params.keyword = filters.keyword;
+  if (filters.fromDate) params.fromDate = filters.fromDate;
+  if (filters.toDate) params.toDate = filters.toDate;
+  if (filters.isGuest !== undefined && filters.isGuest !== '') params.isGuest = filters.isGuest;
   
   // Sort
-  if (sort.sortBy) params.append('sortBy', sort.sortBy);
+  if (sort.sortBy) params.sortBy = sort.sortBy;
   
   // Pagination
-  if (pagination.page) params.append('page', pagination.page);
-  if (pagination.limit) params.append('limit', pagination.limit);
+  if (pagination.page) params.page = pagination.page;
+  if (pagination.limit) params.limit = pagination.limit;
+
+  console.log('📤 Sending request with params:', params);
   
   const response = await apiClient.get('/admin/support-requests', { params });
   return response.data;

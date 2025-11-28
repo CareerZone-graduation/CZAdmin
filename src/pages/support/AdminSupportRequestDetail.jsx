@@ -560,7 +560,7 @@ export const AdminSupportRequestDetail = () => {
             <AdminResponseForm
               onSubmit={handleRespond}
               onCancel={() => setShowResponseForm(false)}
-              loading={respondMutation.isLoading}
+              loading={respondMutation.isPending}
               currentStatus={request.status}
               currentPriority={request.priority}
             />
@@ -589,7 +589,7 @@ export const AdminSupportRequestDetail = () => {
                 <Select
                   value={selectedStatus}
                   onValueChange={handleStatusChange}
-                  disabled={updateStatusMutation.isLoading}
+                  disabled={updateStatusMutation.isPending}
                 >
                   <SelectTrigger id="status">
                     <SelectValue />
@@ -616,7 +616,7 @@ export const AdminSupportRequestDetail = () => {
                 <Select
                   value={selectedPriority}
                   onValueChange={handlePriorityChange}
-                  disabled={updatePriorityMutation.isLoading}
+                  disabled={updatePriorityMutation.isPending}
                 >
                   <SelectTrigger id="priority">
                     <SelectValue />
@@ -641,7 +641,7 @@ export const AdminSupportRequestDetail = () => {
               <CardContent>
                 <Button
                   onClick={handleReopen}
-                  disabled={reopenMutation.isLoading}
+                  disabled={reopenMutation.isPending}
                   variant="outline"
                   className="w-full"
                 >

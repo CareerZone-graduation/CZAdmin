@@ -152,10 +152,7 @@ export const TransactionAnalytics = () => {
   }, [period, granularity, topUsersPeriod]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
   };
 
   const formatNumber = (number) => {
@@ -240,7 +237,7 @@ export const TransactionAnalytics = () => {
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Phân tích Giao dịch</h2>
+          <h2 className="text-2xl font-bold">Phân tích giao dịch</h2>
           <p className="text-muted-foreground">
             Theo dõi và phân tích các giao dịch trong hệ thống
           </p>
@@ -259,31 +256,31 @@ export const TransactionAnalytics = () => {
       {/* Today's Statistics */}
       {todayStats && (
         <div>
-          <h3 className="text-lg font-semibold mb-4">Thống kê Hôm nay</h3>
+          <h3 className="text-lg font-semibold mb-4">Thống kê hôm nay</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
-              title="Doanh thu Hôm nay"
+              title="Doanh thu hôm nay"
               value={formatCurrency(todayStats.todayRevenue)}
               description={`${todayStats.date}`}
               icon={DollarSign}
               loading={loading}
             />
             <MetricCard
-              title="Tổng Giao dịch"
+              title="Tổng giao dịch"
               value={formatNumber(todayStats.totalTransactions)}
               description={`Tỷ lệ thành công: ${todayStats.successRate.toFixed(1)}%`}
               icon={CreditCard}
               loading={loading}
             />
             <MetricCard
-              title="Giao dịch Thành công"
+              title="Giao dịch thành công"
               value={formatNumber(todayStats.successfulTransactions)}
               description="giao dịch hoàn thành"
               icon={CheckCircle}
               loading={loading}
             />
             <MetricCard
-              title="Xu được Nạp"
+              title="Xu được nạp"
               value={formatNumber(todayStats.totalCoinsRecharged)}
               description={`Trung bình: ${formatCurrency(todayStats.averageTransactionValue)}`}
               icon={TrendingUp}

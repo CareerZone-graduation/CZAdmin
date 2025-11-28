@@ -38,8 +38,16 @@ export const AdminResponseForm = ({
     { value: 'low', label: 'Thấp' }
   ];
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submit
+    if (isSubmitting || loading) {
+      return;
+    }
+    
     setError('');
 
     // Validation
@@ -58,6 +66,8 @@ export const AdminResponseForm = ({
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
       await onSubmit({
         response: response.trim(),
@@ -72,6 +82,8 @@ export const AdminResponseForm = ({
       setError('');
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra khi gửi phản hồi');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -184,10 +196,10 @@ export const AdminResponseForm = ({
           <div className="flex items-center gap-2 pt-4">
             <Button 
               type="submit" 
-              disabled={loading || !response.trim() || isOverLimit}
+              disabled={loading || isSubmitting || !response.trim() || isOverLimit}
               className="flex-1"
             >
-              {loading ? (
+              {(loading || isSubmitting) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Đang gửi...

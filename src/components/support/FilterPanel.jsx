@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,12 @@ import { Search, X, Calendar as CalendarIcon, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
-export const FilterPanel = ({ 
-  filters = {}, 
-  onFilterChange, 
+export const FilterPanel = ({
+  filters = {},
+  onFilterChange,
   onReset,
-  className = ''
+  className = '',
+  hideGuestFilter = false
 }) => {
   const [localFilters, setLocalFilters] = useState({
     status: filters.status || [],
@@ -28,8 +29,24 @@ export const FilterPanel = ({
     priority: filters.priority || '',
     keyword: filters.keyword || '',
     dateFrom: filters.dateFrom || null,
-    dateTo: filters.dateTo || null
+    dateTo: filters.dateTo || null,
+    userType: filters.userType || '',
+    isGuest: filters.isGuest || ''
   });
+
+  // Sync localFilters when filters prop changes (e.g., on reset)
+  useEffect(() => {
+    setLocalFilters({
+      status: filters.status || [],
+      category: filters.category || '',
+      priority: filters.priority || '',
+      keyword: filters.keyword || '',
+      dateFrom: filters.dateFrom || null,
+      dateTo: filters.dateTo || null,
+      userType: filters.userType || '',
+      isGuest: filters.isGuest || ''
+    });
+  }, [filters]);
 
   const statusOptions = [
     { value: 'pending', label: 'Đang chờ' },
@@ -56,6 +73,18 @@ export const FilterPanel = ({
     { value: 'low', label: 'Thấp' }
   ];
 
+  const userTypeOptions = [
+    { value: 'all', label: 'Tất cả loại người dùng', icon: '👥', color: 'gray' },
+    { value: 'candidate', label: 'Ứng viên', icon: '👤', color: 'purple' },
+    { value: 'recruiter', label: 'Nhà tuyển dụng', icon: '🏢', color: 'blue' }
+  ];
+
+  const guestOptions = [
+    { value: 'all', label: 'Tất cả', icon: '🔄', description: 'Hiển thị tất cả yêu cầu' },
+    { value: 'true', label: 'Khách', icon: '🔓', description: 'Chưa đăng nhập' },
+    { value: 'false', label: 'Thành viên', icon: '🔐', description: 'Đã đăng nhập' }
+  ];
+
   const handleStatusToggle = (statusValue) => {
     const newStatus = localFilters.status.includes(statusValue)
       ? localFilters.status.filter(s => s !== statusValue)
@@ -74,6 +103,14 @@ export const FilterPanel = ({
     setLocalFilters(prev => ({ ...prev, priority: value === 'all' ? '' : value }));
   };
 
+  const handleUserTypeChange = (value) => {
+    setLocalFilters(prev => ({ ...prev, userType: value === 'all' ? '' : value }));
+  };
+
+  const handleGuestChange = (value) => {
+    setLocalFilters(prev => ({ ...prev, isGuest: value === 'all' ? '' : value }));
+  };
+
   const handleKeywordChange = (e) => {
     setLocalFilters(prev => ({ ...prev, keyword: e.target.value }));
   };
@@ -87,6 +124,7 @@ export const FilterPanel = ({
   };
 
   const handleApplyFilters = () => {
+    console.log('🎯 Applying filters:', localFilters);
     if (onFilterChange) {
       onFilterChange(localFilters);
     }
@@ -99,7 +137,9 @@ export const FilterPanel = ({
       priority: '',
       keyword: '',
       dateFrom: null,
-      dateTo: null
+      dateTo: null,
+      userType: '',
+      isGuest: ''
     };
     setLocalFilters(resetFilters);
     if (onReset) {
@@ -116,7 +156,9 @@ export const FilterPanel = ({
     localFilters.priority ||
     localFilters.keyword ||
     localFilters.dateFrom ||
-    localFilters.dateTo;
+    localFilters.dateTo ||
+    localFilters.userType ||
+    localFilters.isGuest;
 
   return (
     <Card className={className}>
@@ -209,6 +251,160 @@ export const FilterPanel = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* User Classification Section - Only show userType filter when hideGuestFilter is true */}
+        {!hideGuestFilter ? (
+          <div className="space-y-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+              <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="text-sm font-semibold text-slate-700">Phân loại người dùng</span>
+            </div>
+
+            {/* User Type - Visual Cards */}
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-500 uppercase tracking-wide">Loại tài khoản</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {userTypeOptions.map((type) => {
+                  const isSelected = (localFilters.userType || 'all') === type.value;
+                  const colorClasses = {
+                    gray: isSelected ? 'border-slate-400 bg-slate-100' : 'border-slate-200 hover:border-slate-300',
+                    purple: isSelected ? 'border-purple-400 bg-purple-50' : 'border-slate-200 hover:border-purple-300',
+                    blue: isSelected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-300'
+                  };
+                  const dotColors = {
+                    gray: 'bg-slate-400',
+                    purple: 'bg-purple-500',
+                    blue: 'bg-blue-500'
+                  };
+                  return (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => handleUserTypeChange(type.value)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all duration-200 text-left ${colorClasses[type.color]} ${isSelected ? 'shadow-sm' : ''}`}
+                    >
+                      <span className="text-lg">{type.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-700">{type.label}</span>
+                          {isSelected && (
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <div className={`w-2.5 h-2.5 rounded-full ${dotColors[type.color]}`}></div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Auth Status - Toggle Cards */}
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-500 uppercase tracking-wide">Trạng thái xác thực</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {guestOptions.map((option) => {
+                  const isSelected = (localFilters.isGuest || 'all') === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleGuestChange(option.value)}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 ${
+                        isSelected
+                          ? 'border-indigo-400 bg-indigo-50 shadow-sm'
+                          : 'border-slate-200 hover:border-indigo-300 bg-white'
+                      }`}
+                    >
+                      <span className="text-xl">{option.icon}</span>
+                      <span className={`text-xs font-medium ${isSelected ? 'text-indigo-700' : 'text-slate-600'}`}>
+                        {option.label}
+                      </span>
+                      <span className="text-[10px] text-slate-400 text-center leading-tight">
+                        {option.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Filter Summary */}
+            {(localFilters.userType || localFilters.isGuest) && (
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                <span className="text-xs text-slate-500">Đang lọc:</span>
+                <div className="flex flex-wrap gap-1">
+                  {localFilters.userType && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700">
+                      {userTypeOptions.find(t => t.value === localFilters.userType)?.icon}
+                      {userTypeOptions.find(t => t.value === localFilters.userType)?.label}
+                    </span>
+                  )}
+                  {localFilters.isGuest && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700">
+                      {guestOptions.find(g => g.value === localFilters.isGuest)?.icon}
+                      {guestOptions.find(g => g.value === localFilters.isGuest)?.label}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Simplified User Type Filter when hideGuestFilter is true */
+          <div className="space-y-2">
+            <Label htmlFor="userType">Loại tài khoản</Label>
+            <div className="grid grid-cols-1 gap-2">
+              {userTypeOptions.map((type) => {
+                const isSelected = (localFilters.userType || 'all') === type.value;
+                const colorClasses = {
+                  gray: isSelected ? 'border-slate-400 bg-slate-100' : 'border-slate-200 hover:border-slate-300',
+                  purple: isSelected ? 'border-purple-400 bg-purple-50' : 'border-slate-200 hover:border-purple-300',
+                  blue: isSelected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-300'
+                };
+                const dotColors = {
+                  gray: 'bg-slate-400',
+                  purple: 'bg-purple-500',
+                  blue: 'bg-blue-500'
+                };
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => handleUserTypeChange(type.value)}
+                    className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all duration-200 text-left ${colorClasses[type.color]} ${isSelected ? 'shadow-sm' : ''}`}
+                  >
+                    <span className="text-lg">{type.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-700">{type.label}</span>
+                        {isSelected && (
+                          <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className={`w-2.5 h-2.5 rounded-full ${dotColors[type.color]}`}></div>
+                  </button>
+                );
+              })}
+            </div>
+            {localFilters.userType && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-slate-500">Đang lọc:</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700">
+                  {userTypeOptions.find(t => t.value === localFilters.userType)?.icon}
+                  {userTypeOptions.find(t => t.value === localFilters.userType)?.label}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Date Range Picker */}
         <div className="space-y-2">

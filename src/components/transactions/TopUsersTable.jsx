@@ -6,10 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/utils/formatDate';
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-  }).format(amount);
+  return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
 };
 
 const formatNumber = (number) => {
