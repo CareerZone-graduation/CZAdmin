@@ -37,29 +37,38 @@ const getStatusBadge = (status) => {
   );
 };
 
-// Priority Badge Component
-const getPriorityBadge = (priority) => {
+// Priority Badge Component - shows "Đã giải quyết" for resolved/closed status
+const getPriorityBadge = (priority, status) => {
+  // If resolved or closed, show "Đã giải quyết" instead of priority
+  if (status === 'resolved' || status === 'closed') {
+    return (
+      <Badge variant="outline" className="bg-green-500 hover:bg-green-600 text-white border-0">
+        Đã giải quyết
+      </Badge>
+    );
+  }
+
   const priorityConfig = {
-    'urgent': { 
-      label: 'Khẩn cấp', 
-      className: 'bg-red-500 hover:bg-red-600 text-white border-0' 
+    urgent: {
+      label: 'Khẩn cấp',
+      className: 'bg-red-500 hover:bg-red-600 text-white border-0'
     },
-    'high': { 
-      label: 'Cao', 
-      className: 'bg-orange-500 hover:bg-orange-600 text-white border-0' 
+    high: {
+      label: 'Cao',
+      className: 'bg-orange-500 hover:bg-orange-600 text-white border-0'
     },
-    'medium': { 
-      label: 'Trung bình', 
-      className: 'bg-yellow-500 hover:bg-yellow-600 text-white border-0' 
+    medium: {
+      label: 'Trung bình',
+      className: 'bg-yellow-500 hover:bg-yellow-600 text-white border-0'
     },
-    'low': { 
-      label: 'Thấp', 
-      className: 'bg-gray-500 hover:bg-gray-600 text-white border-0' 
+    low: {
+      label: 'Thấp',
+      className: 'bg-gray-500 hover:bg-gray-600 text-white border-0'
     }
   };
 
   const config = priorityConfig[priority] || priorityConfig.medium;
-  
+
   return (
     <Badge variant="outline" className={config.className}>
       {config.label}
@@ -344,7 +353,7 @@ export const SupportRequestTable = ({
                 {getStatusBadge(request.status)}
               </TableCell>
               <TableCell>
-                {getPriorityBadge(request.priority)}
+                {getPriorityBadge(request.priority, request.status)}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(request.createdAt)}

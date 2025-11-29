@@ -33,15 +33,13 @@ import {
   CheckCircle2,
   RefreshCw,
   Download,
-  Eye,
-  X
+  Eye
 } from 'lucide-react';
 import { AdminResponseForm } from '@/components/support/AdminResponseForm';
 import {
   getSupportRequestById,
   respondToRequest,
   updateStatus,
-  updatePriority,
   reopenRequest
 } from '@/services/supportRequestService';
 import { formatDate } from '@/utils/formatDate';
@@ -59,13 +57,22 @@ const getStatusBadge = (status) => {
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
-// Priority Badge Component
-const getPriorityBadge = (priority) => {
+// Priority Badge Component - shows "Đã giải quyết" for resolved/closed status
+const getPriorityBadge = (priority, status) => {
+  // If resolved or closed, show "Đã giải quyết" instead of priority
+  if (status === 'resolved' || status === 'closed') {
+    return (
+      <Badge className="bg-green-500 text-white">
+        Đã giải quyết
+      </Badge>
+    );
+  }
+
   const priorityConfig = {
-    'urgent': { label: 'Khẩn cấp', className: 'bg-red-500 text-white' },
-    'high': { label: 'Cao', className: 'bg-orange-500 text-white' },
-    'medium': { label: 'Trung bình', className: 'bg-yellow-500 text-white' },
-    'low': { label: 'Thấp', className: 'bg-gray-500 text-white' }
+    urgent: { label: 'Khẩn cấp', className: 'bg-red-500 text-white' },
+    high: { label: 'Cao', className: 'bg-orange-500 text-white' },
+    medium: { label: 'Trung bình', className: 'bg-yellow-500 text-white' },
+    low: { label: 'Thấp', className: 'bg-gray-500 text-white' }
   };
   const config = priorityConfig[priority] || priorityConfig.medium;
   return <Badge className={config.className}>{config.label}</Badge>;
@@ -94,6 +101,28 @@ const getCategoryLabel = (category) => {
   return categoryLabels[category] || category;
 };
 
+// Status Label
+const getStatusLabel = (status) => {
+  const statusLabels = {
+    'pending': 'Đang chờ',
+    'in-progress': 'Đang xử lý',
+    'resolved': 'Đã giải quyết',
+    'closed': 'Đã đóng'
+  };
+  return statusLabels[status] || status;
+};
+
+// Priority Label
+const getPriorityLabel = (priority) => {
+  const priorityLabels = {
+    'urgent': 'Khẩn cấp',
+    'high': 'Cao',
+    'medium': 'Trung bình',
+    'low': 'Thấp'
+  };
+  return priorityLabels[priority] || priority;
+};
+
 export const AdminSupportRequestDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -104,7 +133,6 @@ export const AdminSupportRequestDetail = () => {
     searchParams.get('action') === 'respond'
   );
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedPriority, setSelectedPriority] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
 
   // Fetch support request details
@@ -125,7 +153,6 @@ export const AdminSupportRequestDetail = () => {
   useEffect(() => {
     if (request) {
       setSelectedStatus(request.status);
-      setSelectedPriority(request.priority);
     }
   }, [request]);
 
@@ -158,20 +185,6 @@ export const AdminSupportRequestDetail = () => {
     }
   });
 
-  // Update priority mutation
-  const updatePriorityMutation = useMutation({
-    mutationFn: (priority) => updatePriority(id, priority),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-support-request', id]);
-      queryClient.invalidateQueries(['admin-support-requests']);
-      toast.success('Đã cập nhật độ ưu tiên thành công');
-    },
-    onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Có lỗi xảy ra khi cập nhật độ ưu tiên');
-      setSelectedPriority(request?.priority);
-    }
-  });
-
   // Reopen mutation
   const reopenMutation = useMutation({
     mutationFn: () => reopenRequest(id),
@@ -194,13 +207,6 @@ export const AdminSupportRequestDetail = () => {
     if (newStatus !== request?.status) {
       setSelectedStatus(newStatus);
       updateStatusMutation.mutate(newStatus);
-    }
-  };
-
-  const handlePriorityChange = (newPriority) => {
-    if (newPriority !== request?.priority) {
-      setSelectedPriority(newPriority);
-      updatePriorityMutation.mutate(newPriority);
     }
   };
 
@@ -271,7 +277,7 @@ export const AdminSupportRequestDetail = () => {
           </h1>
           <div className="flex items-center gap-2">
             {getStatusBadge(request.status)}
-            {getPriorityBadge(request.priority)}
+            {getPriorityBadge(request.priority, request.status)}
             <span className="text-sm text-muted-foreground">
               ID: {request._id.slice(-8)}
             </span>
@@ -530,12 +536,12 @@ export const AdminSupportRequestDetail = () => {
                           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                             {response.statusChange && (
                               <span>
-                                Trạng thái: {response.statusChange.from} → {response.statusChange.to}
+                                Trạng thái: {getStatusLabel(response.statusChange.from)} → {getStatusLabel(response.statusChange.to)}
                               </span>
                             )}
                             {response.priorityChange && (
                               <span>
-                                Độ ưu tiên: {response.priorityChange.from} → {response.priorityChange.to}
+                                Độ ưu tiên: {getPriorityLabel(response.priorityChange.from)} → {getPriorityLabel(response.priorityChange.to)}
                               </span>
                             )}
                           </div>
@@ -599,33 +605,6 @@ export const AdminSupportRequestDetail = () => {
                     <SelectItem value="in-progress">Đang xử lý</SelectItem>
                     <SelectItem value="resolved">Đã giải quyết</SelectItem>
                     <SelectItem value="closed">Đã đóng</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Priority Update */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Cập nhật độ ưu tiên</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="priority">Độ ưu tiên</Label>
-                <Select
-                  value={selectedPriority}
-                  onValueChange={handlePriorityChange}
-                  disabled={updatePriorityMutation.isPending}
-                >
-                  <SelectTrigger id="priority">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Thấp</SelectItem>
-                    <SelectItem value="medium">Trung bình</SelectItem>
-                    <SelectItem value="high">Cao</SelectItem>
-                    <SelectItem value="urgent">Khẩn cấp</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
