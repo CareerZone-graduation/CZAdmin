@@ -601,12 +601,39 @@ export const AdminSupportRequestDetail = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Đang chờ</SelectItem>
-                    <SelectItem value="in-progress">Đang xử lý</SelectItem>
-                    <SelectItem value="resolved">Đã giải quyết</SelectItem>
+                    {/* pending: chỉ có thể chuyển sang in-progress, resolved, closed */}
+                    <SelectItem
+                      value="pending"
+                      disabled={request.status !== 'pending'}
+                      className={request.status !== 'pending' ? 'opacity-50' : ''}
+                    >
+                      Đang chờ
+                    </SelectItem>
+                    {/* in-progress: có thể từ pending, hoặc giữ nguyên */}
+                    <SelectItem
+                      value="in-progress"
+                      disabled={request.status === 'resolved' || request.status === 'closed'}
+                      className={request.status === 'resolved' || request.status === 'closed' ? 'opacity-50' : ''}
+                    >
+                      Đang xử lý
+                    </SelectItem>
+                    {/* resolved: có thể từ pending, in-progress */}
+                    <SelectItem
+                      value="resolved"
+                      disabled={request.status === 'closed'}
+                      className={request.status === 'closed' ? 'opacity-50' : ''}
+                    >
+                      Đã giải quyết
+                    </SelectItem>
+                    {/* closed: có thể từ bất kỳ trạng thái nào */}
                     <SelectItem value="closed">Đã đóng</SelectItem>
                   </SelectContent>
                 </Select>
+                {/* Hint text */}
+                <p className="text-xs text-muted-foreground">
+                  {request.status === 'resolved' && 'Yêu cầu đã giải quyết chỉ có thể đóng.'}
+                  {request.status === 'closed' && 'Yêu cầu đã đóng. Sử dụng nút "Mở lại" bên dưới.'}
+                </p>
               </div>
             </CardContent>
           </Card>
