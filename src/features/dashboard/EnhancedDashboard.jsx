@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/constants/translations';
 import { 
-  Download,
-  Filter,
   RefreshCw,
-  Calendar,
   TrendingUp,
   BarChart3
 } from 'lucide-react';
@@ -31,10 +28,7 @@ export function EnhancedDashboard() {
     setTimeout(() => setIsRefreshing(false), 2000);
   };
 
-  const handleExport = () => {
-    // Implement export functionality
-    console.log('Exporting dashboard data...');
-  };
+
 
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">

@@ -36,8 +36,7 @@ const getPaymentMethodBadge = (method) => {
   const methodConfig = {
     'VNPAY': { color: 'bg-blue-500', label: 'VNPAY' },
     'ZALOPAY': { color: 'bg-purple-500', label: 'ZaloPay' },
-    'MOMO': { color: 'bg-pink-500', label: 'MoMo' },
-    'BANK_TRANSFER': { color: 'bg-green-500', label: 'Chuyển khoản' }
+    'MOMO': { color: 'bg-pink-500', label: 'MoMo' }
   };
 
   const config = methodConfig[method] || { color: 'bg-gray-500', label: method };

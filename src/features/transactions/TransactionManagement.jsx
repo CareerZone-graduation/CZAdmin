@@ -6,12 +6,10 @@ import { TransactionAnalytics } from '@/components/transactions/TransactionAnaly
 import { TransactionFilters } from '@/components/transactions/TransactionFilters';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
 import { getTransactionsList } from '@/services/analyticsService';
-import { exportTransactionsToExcel } from '@/utils/exportToExcel';
 import { toast } from 'sonner';
 import { 
   BarChart3,
   List,
-  Download,
   RefreshCw
 } from 'lucide-react';
 
@@ -113,56 +111,6 @@ export function TransactionManagement({ className }) {
     fetchTransactions(filters, pagination.currentPage);
   };
 
-  const handleExport = async () => {
-    try {
-      console.log('Starting export with current filters:', filters);
-      const loadingToast = toast.loading('Đang tải dữ liệu từ MongoDB...');
-      
-      // Gọi API lấy TẤT CẢ giao dịch (không phân trang) để xuất Excel
-      const cleanFilters = Object.keys(filters).reduce((acc, key) => {
-        if (filters[key] && filters[key] !== '' && filters[key] !== 'all' && filters[key] !== 'default') {
-          acc[key] = filters[key];
-        }
-        return acc;
-      }, {});
-
-      // Lấy tất cả giao dịch bằng cách set limit rất lớn
-      const params = {
-        ...cleanFilters,
-        page: 1,
-        limit: 100000 // Lấy tất cả
-      };
-
-      const response = await getTransactionsList(params);
-      
-      if (!response.data.success || !response.data.data || response.data.data.length === 0) {
-        toast.dismiss(loadingToast);
-        toast.warning('Không có dữ liệu để xuất');
-        return;
-      }
-
-      const allTransactions = response.data.data;
-      console.log('Fetched transactions for export:', allTransactions.length);
-      
-      toast.dismiss(loadingToast);
-      toast.loading('Đang tạo file Excel...', { id: 'creating-excel' });
-      
-      // Export transactions to Excel
-      const result = exportTransactionsToExcel(allTransactions, 'Danh_sach_giao_dich');
-      
-      toast.dismiss('creating-excel');
-      
-      if (result) {
-        toast.success(`Xuất Excel thành công ${allTransactions.length} giao dịch! File đã được lưu vào thư mục Downloads của bạn.`, {
-          duration: 5000
-        });
-      }
-    } catch (err) {
-      console.error('Export error:', err);
-      toast.error('Lỗi khi xuất Excel: ' + err.message);
-    }
-  };
-
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
@@ -210,7 +158,6 @@ export function TransactionManagement({ className }) {
             onFiltersChange={handleFiltersChange}
             onSearch={handleSearch}
             onClearFilters={handleClearFilters}
-            onExport={handleExport}
             loading={loading}
             totalResults={pagination.totalItems}
           />

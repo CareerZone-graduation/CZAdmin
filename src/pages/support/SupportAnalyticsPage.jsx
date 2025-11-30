@@ -9,7 +9,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   ArrowLeft, 
   Calendar as CalendarIcon, 
-  Download, 
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
@@ -64,24 +63,7 @@ export const SupportAnalyticsPage = () => {
     setDateTo(endOfDay(new Date()));
   };
 
-  // Export to Excel (optional feature)
-  const handleExportToExcel = () => {
-    try {
-      // This is a placeholder for Excel export functionality
-      // You would need to implement actual Excel export logic here
-      // For example, using libraries like xlsx or exceljs
-      
-      toast.info('Tính năng xuất Excel đang được phát triển');
-      
-      // Example implementation:
-      // const workbook = XLSX.utils.book_new();
-      // const worksheet = XLSX.utils.json_to_sheet(analytics);
-      // XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics');
-      // XLSX.writeFile(workbook, `support-analytics-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-    } catch (error) {
-      toast.error('Có lỗi xảy ra khi xuất dữ liệu');
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -229,14 +211,6 @@ export const SupportAnalyticsPage = () => {
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Làm mới
-              </Button>
-              <Button
-                onClick={handleExportToExcel}
-                disabled={isLoading || !analytics}
-                variant="outline"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Xuất Excel
               </Button>
             </div>
 

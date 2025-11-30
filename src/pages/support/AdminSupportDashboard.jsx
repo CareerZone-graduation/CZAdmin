@@ -314,14 +314,14 @@ export const AdminSupportDashboard = () => {
             className="flex items-center gap-2 data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
           >
             <UserCheck className="h-4 w-4" />
-            <span>Đã đăng nhập</span>
+            <span>Thành viên</span>
           </TabsTrigger>
           <TabsTrigger
             value="guest"
             className="flex items-center gap-2 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-700"
           >
             <UserX className="h-4 w-4" />
-            <span>Chưa đăng nhập</span>
+            <span>Khách vãng lai</span>
           </TabsTrigger>
         </TabsList>
 

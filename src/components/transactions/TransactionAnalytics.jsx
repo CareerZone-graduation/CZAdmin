@@ -15,7 +15,7 @@ import {
   getTransactionToday, 
   getTopSpendingUsers 
 } from '@/services/analyticsService';
-import { exportAnalyticsToExcel, exportTopUsersToExcel } from '@/utils/exportToExcel';
+
 import { 
   DollarSign, 
   TrendingUp, 
@@ -26,8 +26,7 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw,
-  Download
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/utils/formatDate';
@@ -105,7 +104,7 @@ export const TransactionAnalytics = () => {
   const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [period, setPeriod] = useState('7d');
+  const [period, setPeriod] = useState('30d');
   const [granularity, setGranularity] = useState('daily');
   const [topUsersPeriod, setTopUsersPeriod] = useState('30d');
 
@@ -182,56 +181,6 @@ export const TransactionAnalytics = () => {
     );
   }
 
-  const handleExportAnalytics = () => {
-    try {
-      if (!analyticsData) {
-        toast.warning('Không có dữ liệu để xuất');
-        return;
-      }
-      
-      console.log('Exporting analytics data...');
-      const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
-      
-      const result = exportAnalyticsToExcel(analyticsData, 'Phan_tich_giao_dich');
-      
-      toast.dismiss(loadingToast);
-      
-      if (result) {
-        toast.success('Xuất Excel thành công! Kiểm tra thư mục Downloads của bạn.', {
-          duration: 5000
-        });
-      }
-    } catch (err) {
-      console.error('Export error:', err);
-      toast.error('Lỗi khi xuất Excel: ' + err.message);
-    }
-  };
-
-  const handleExportTopUsers = () => {
-    try {
-      if (!topUsers || topUsers.length === 0) {
-        toast.warning('Không có dữ liệu người dùng để xuất');
-        return;
-      }
-      
-      console.log('Exporting top users, count:', topUsers.length);
-      const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
-      
-      const result = exportTopUsersToExcel(topUsers, 'Top_nguoi_dung_chi_tieu');
-      
-      toast.dismiss(loadingToast);
-      
-      if (result) {
-        toast.success('Xuất Excel thành công! Kiểm tra thư mục Downloads của bạn.', {
-          duration: 5000
-        });
-      }
-    } catch (err) {
-      console.error('Export error:', err);
-      toast.error('Lỗi khi xuất Excel: ' + err.message);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -242,14 +191,6 @@ export const TransactionAnalytics = () => {
             Theo dõi và phân tích các giao dịch trong hệ thống
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleExportAnalytics}
-          disabled={loading || !analyticsData}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Xuất Excel
-        </Button>
       </div>
       
 
@@ -362,15 +303,6 @@ export const TransactionAnalytics = () => {
               Xếp hạng người dùng có tổng chi tiêu cao nhất
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleExportTopUsers}
-            disabled={loading || !topUsers || topUsers.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Xuất Excel
-          </Button>
         </div>
         <TopUsersTable users={topUsers} loading={loading} period={topUsersPeriod} />
       </div>

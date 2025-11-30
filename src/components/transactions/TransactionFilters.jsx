@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, X, Calendar, Download } from 'lucide-react';
+import { Search, Filter, X, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
@@ -12,8 +12,7 @@ const PAYMENT_METHODS = [
   { value: 'all', label: 'Tất cả phương thức' },
   { value: 'VNPAY', label: 'VNPAY' },
   { value: 'ZALOPAY', label: 'ZaloPay' },
-  { value: 'MOMO', label: 'MoMo' },
-  { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng' }
+  { value: 'MOMO', label: 'MoMo' }
 ];
 
 const TRANSACTION_STATUSES = [
@@ -37,7 +36,6 @@ export const TransactionFilters = ({
   onFiltersChange, 
   onSearch,
   onClearFilters,
-  onExport,
   loading = false,
   totalResults = 0
 }) => {
@@ -77,14 +75,6 @@ export const TransactionFilters = ({
     return count;
   };
 
-  const handleExport = () => {
-    if (totalResults === 0) {
-      toast.warning('Không có dữ liệu để xuất');
-      return;
-    }
-    onExport();
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -105,15 +95,6 @@ export const TransactionFilters = ({
             >
               <Filter className="h-4 w-4 mr-2" />
               {showAdvanced ? 'Ẩn' : 'Hiện'} bộ lọc nâng cao
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleExport}
-              disabled={loading || totalResults === 0}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Xuất Excel
             </Button>
           </div>
         </div>

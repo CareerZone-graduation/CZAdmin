@@ -11,7 +11,7 @@ export const mockTransactions = [
     description: 'Premium Job Posting - Senior Developer',
     createdAt: '2024-01-15T10:30:00Z',
     completedAt: '2024-01-15T10:30:05Z',
-    paymentMethod: 'credit_card',
+    paymentMethod: 'VNPAY',
     transactionId: 'txn_abc123',
   },
   {
@@ -25,7 +25,7 @@ export const mockTransactions = [
     description: 'Featured Job Listing - Product Manager',
     createdAt: '2024-01-14T14:20:00Z',
     completedAt: '2024-01-14T14:20:03Z',
-    paymentMethod: 'credit_card',
+    paymentMethod: 'MOMO',
     transactionId: 'txn_def456',
   },
   {
@@ -39,7 +39,7 @@ export const mockTransactions = [
     description: 'Monthly Premium Subscription',
     createdAt: '2024-01-16T09:15:00Z',
     completedAt: null,
-    paymentMethod: 'bank_transfer',
+    paymentMethod: 'ZALOPAY',
     transactionId: 'txn_ghi789',
   },
   {
@@ -53,7 +53,7 @@ export const mockTransactions = [
     description: 'Standard Job Posting - Frontend Developer',
     createdAt: '2024-01-13T16:45:00Z',
     completedAt: null,
-    paymentMethod: 'credit_card',
+    paymentMethod: 'VNPAY',
     transactionId: 'txn_jkl012',
   },
   {
@@ -67,7 +67,7 @@ export const mockTransactions = [
     description: 'Refund for cancelled job posting',
     createdAt: '2024-01-12T11:30:00Z',
     completedAt: '2024-01-12T11:35:00Z',
-    paymentMethod: 'credit_card',
+    paymentMethod: 'MOMO',
     transactionId: 'txn_mno345',
   },
 ];
@@ -88,7 +88,7 @@ export const TRANSACTION_STATUSES = {
 import { CreditCard, Building2, Wallet } from 'lucide-react';
 
 export const PAYMENT_METHODS = {
-  credit_card: { label: 'Credit Card', icon: CreditCard },
-  bank_transfer: { label: 'Bank Transfer', icon: Building2 },
-  paypal: { label: 'PayPal', icon: Wallet },
+  VNPAY: { label: 'VNPay', icon: CreditCard },
+  MOMO: { label: 'MoMo', icon: Wallet },
+  ZALOPAY: { label: 'ZaloPay', icon: Building2 }
 };

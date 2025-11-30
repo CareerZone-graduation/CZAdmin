@@ -40,15 +40,14 @@ export function JobManagement() {
   });
 
   // Fetch jobs from API
-  const fetchJobs = useCallback(async (params = {}) => {
+  const fetchJobs = useCallback(async (page = meta.currentPage) => {
     try {
       setLoading(true);
       setError(null);
       
       const queryParams = {
-        page: meta.currentPage,
-        limit: meta.limit,
-        ...params
+        page: page,
+        limit: meta.limit
       };
 
       if (searchTerm) queryParams.search = searchTerm;
@@ -65,16 +64,18 @@ export function JobManagement() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, statusFilter, companyFilter, sortFilter, meta.currentPage, meta.limit]);
+  }, [searchTerm, statusFilter, companyFilter, sortFilter, meta.limit]);
 
   const handlePageChange = (newPage) => {
-    setMeta(prev => ({ ...prev, currentPage: newPage }));
+    setMeta((prev) => ({ ...prev, currentPage: newPage }));
+    fetchJobs(newPage);
   };
 
-  // Load jobs on component mount and when filters change
+  // Load jobs when filters change - always reset to page 1
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    setMeta((prev) => ({ ...prev, currentPage: 1 }));
+    fetchJobs(1);
+  }, [searchTerm, statusFilter, companyFilter, sortFilter]);
 
 
   const handleStatusChange = useCallback(async (jobId, newStatus) => {

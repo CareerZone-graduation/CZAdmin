@@ -71,12 +71,18 @@ export function Sidebar({ className }) {
   const [pendingSupportCount, setPendingSupportCount] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Fetch pending support requests count
+  // Fetch pending support requests count - only on initial mount
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPendingCount = async () => {
       try {
-        const response = await getAllSupportRequests({ status: 'pending' }, {}, { page: 1, limit: 1 });
-        if (response?.meta?.totalItems) {
+        const response = await getAllSupportRequests(
+          { status: 'pending' },
+          {},
+          { page: 1, limit: 1 }
+        );
+        if (isMounted && response?.meta?.totalItems !== undefined) {
           setPendingSupportCount(response.meta.totalItems);
         }
       } catch (error) {
@@ -84,10 +90,13 @@ export function Sidebar({ className }) {
       }
     };
 
+    // Only fetch once on mount
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency - only run once on mount
 
   const handleLogout = useCallback(async () => {
     await dispatch(logoutUser());
