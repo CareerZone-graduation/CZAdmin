@@ -485,84 +485,91 @@ export const AdminSupportRequestDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* User Messages */}
-                  {request.messages && request.messages.length > 0 && (
-                    <div className="space-y-3">
-                      {request.messages.map((message, index) => (
-                        <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm">{message.sender?.name}</p>
-                              {getUserTypeBadge(message.sender?.userType)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(message.createdAt)}
-                            </p>
-                          </div>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          {message.attachments && message.attachments.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {message.attachments.map((att, attIndex) => (
-                                <a
-                                  key={attIndex}
-                                  href={att.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                                >
-                                  <Paperclip className="h-3 w-3" />
-                                  {att.filename}
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Combined Message History */}
+                  {(() => {
+                    const combinedMessages = [
+                      ...(request.messages || []).map(m => ({ ...m, type: 'user' })),
+                      ...(request.adminResponses || []).map(r => ({ ...r, type: 'admin' }))
+                    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-                  {/* Admin Responses */}
-                  {request.adminResponses && request.adminResponses.length > 0 && (
-                    <div className="space-y-3">
-                      {request.adminResponses.map((response, index) => (
-                        <div key={index} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm">{response.adminName}</p>
-                              <Badge variant="outline" className="bg-green-100 text-green-800">
-                                Admin
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(response.createdAt)}
-                            </p>
-                          </div>
-                          <p className="text-sm whitespace-pre-wrap">{response.response}</p>
-                          {(response.statusChange || response.priorityChange) && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                              {response.statusChange && (
-                                <span>
-                                  Trạng thái: {getStatusLabel(response.statusChange.from)} → {getStatusLabel(response.statusChange.to)}
-                                </span>
-                              )}
-                              {response.priorityChange && (
-                                <span>
-                                  Độ ưu tiên: {getPriorityLabel(response.priorityChange.from)} → {getPriorityLabel(response.priorityChange.to)}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    if (combinedMessages.length === 0) {
+                      return (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Chưa có tin nhắn nào
+                        </p>
+                      );
+                    }
 
-                  {(!request.messages || request.messages.length === 0) &&
-                    (!request.adminResponses || request.adminResponses.length === 0) && (
-                      <p className="text-sm text-muted-foreground text-center py-8">
-                        Chưa có tin nhắn nào
-                      </p>
-                    )}
+                    return (
+                      <div className="space-y-3">
+                        {combinedMessages.map((item, index) => {
+                          if (item.type === 'user') {
+                            return (
+                              <div key={`user-${index}`} className="border-l-4 border-blue-500 pl-4 py-2">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">{item.sender?.name}</p>
+                                    {getUserTypeBadge(item.sender?.userType)}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(item.createdAt)}
+                                  </p>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+                                {item.attachments && item.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-1">
+                                    {item.attachments.map((att, attIndex) => (
+                                      <a
+                                        key={attIndex}
+                                        href={att.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                      >
+                                        <Paperclip className="h-3 w-3" />
+                                        {att.filename}
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div key={`admin-${index}`} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">{item.adminName}</p>
+                                    <Badge variant="outline" className="bg-green-100 text-green-800">
+                                      Admin
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(item.createdAt)}
+                                  </p>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{item.response}</p>
+                                {(item.statusChange || item.priorityChange) && (
+                                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                    {item.statusChange && (
+                                      <span>
+                                        Trạng thái: {getStatusLabel(item.statusChange.from)} → {getStatusLabel(item.statusChange.to)}
+                                      </span>
+                                    )}
+                                    {item.priorityChange && (
+                                      <span>
+                                        Độ ưu tiên: {getPriorityLabel(item.priorityChange.from)} → {getPriorityLabel(item.priorityChange.to)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
