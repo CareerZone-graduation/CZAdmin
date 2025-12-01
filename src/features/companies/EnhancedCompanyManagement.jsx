@@ -611,7 +611,7 @@ export function EnhancedCompanyManagement() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => window.open(`http://localhost:3200/companies/${company.id}`, '_blank')}
+                        onClick={() => window.open(`/companies/${company.id}`, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
                         {t('companies.viewCompanyPage')}

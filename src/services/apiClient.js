@@ -5,7 +5,7 @@ import { refreshToken } from './authService';
 import { toast } from 'sonner';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: "/api",
   timeout: 15000,
   withCredentials: false, // KHÔNG gửi cookie mặc định
 });

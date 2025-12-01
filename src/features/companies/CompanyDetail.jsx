@@ -161,7 +161,7 @@ export function CompanyDetail() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`http://localhost:3200/companies/${id}`, '_blank')}
+                onClick={() => window.open(`/companies/${id}`, '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Xem trang công ty
