@@ -44,6 +44,7 @@ import {
 } from '@/services/supportRequestService';
 import { formatDate } from '@/utils/formatDate';
 import { toast } from 'sonner';
+import ConfirmationDialog from '@/components/common/ConfirmationDialog';
 
 // Status Badge Component
 const getStatusBadge = (status) => {
@@ -134,6 +135,7 @@ export const AdminSupportRequestDetail = () => {
   );
   const [selectedStatus, setSelectedStatus] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
+  const [confirmReopenOpen, setConfirmReopenOpen] = useState(false);
 
   // Fetch support request details
   const {
@@ -192,9 +194,11 @@ export const AdminSupportRequestDetail = () => {
       queryClient.invalidateQueries(['admin-support-request', id]);
       queryClient.invalidateQueries(['admin-support-requests']);
       toast.success('Đã mở lại yêu cầu thành công');
+      setConfirmReopenOpen(false);
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || 'Có lỗi xảy ra khi mở lại yêu cầu');
+      setConfirmReopenOpen(false);
     }
   });
 
@@ -211,9 +215,11 @@ export const AdminSupportRequestDetail = () => {
   };
 
   const handleReopen = () => {
-    if (window.confirm('Bạn có chắc chắn muốn mở lại yêu cầu này?')) {
-      reopenMutation.mutate();
-    }
+    setConfirmReopenOpen(true);
+  };
+
+  const executeReopen = () => {
+    reopenMutation.mutate();
   };
 
   // Loading state
@@ -263,445 +269,463 @@ export const AdminSupportRequestDetail = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate('/support')}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Quay lại danh sách
-      </Button>
+        {/* Back Button */}
+        <Button variant="ghost" onClick={() => navigate('/support')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại danh sách
+        </Button>
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {request.subject}
-          </h1>
-          <div className="flex items-center gap-2">
-            {getStatusBadge(request.status)}
-            {getPriorityBadge(request.priority, request.status)}
-            <span className="text-sm text-muted-foreground">
-              ID: {request._id.slice(-8)}
-            </span>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {request.subject}
+            </h1>
+            <div className="flex items-center gap-2">
+              {getStatusBadge(request.status)}
+              {getPriorityBadge(request.priority, request.status)}
+              <span className="text-sm text-muted-foreground">
+                ID: {request._id.slice(-8)}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Request Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Requester Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Thông tin người yêu cầu</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Tên</p>
-                  <p className="font-medium">{request.requester?.name || 'N/A'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{request.requester?.email || 'N/A'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Loại người dùng</p>
-                  <div className="mt-1">
-                    {getUserTypeBadge(request.requester?.userType)}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Request Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Chi tiết yêu cầu</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Danh mục</p>
-                <p className="font-medium">{getCategoryLabel(request.category)}</p>
-              </div>
-              <Separator />
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Mô tả</p>
-                <p className="whitespace-pre-wrap">{request.description}</p>
-              </div>
-              <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Ngày tạo</p>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm">{formatDate(request.createdAt)}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Cập nhật lần cuối</p>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm">{formatDate(request.updatedAt)}</p>
-                  </div>
-                </div>
-              </div>
-              {request.resolvedAt && (
-                <>
-                  <Separator />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Request Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Requester Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Thông tin người yêu cầu</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Ngày giải quyết</p>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <p className="text-sm">{formatDate(request.resolvedAt)}</p>
+                    <p className="text-sm text-muted-foreground">Tên</p>
+                    <p className="font-medium">{request.requester?.name || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium">{request.requester?.email || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Loại người dùng</p>
+                    <div className="mt-1">
+                      {getUserTypeBadge(request.requester?.userType)}
                     </div>
                   </div>
-                </>
-              )}
-              {request.closedAt && (
-                <>
-                  <Separator />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Request Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Chi tiết yêu cầu</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Danh mục</p>
+                  <p className="font-medium">{getCategoryLabel(request.category)}</p>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Mô tả</p>
+                  <p className="whitespace-pre-wrap">{request.description}</p>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Ngày đóng</p>
+                    <p className="text-sm text-muted-foreground mb-1">Ngày tạo</p>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                      <p className="text-sm">{formatDate(request.closedAt)}</p>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm">{formatDate(request.createdAt)}</p>
                     </div>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Cập nhật lần cuối</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm">{formatDate(request.updatedAt)}</p>
+                    </div>
+                  </div>
+                </div>
+                {request.resolvedAt && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Ngày giải quyết</p>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <p className="text-sm">{formatDate(request.resolvedAt)}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {request.closedAt && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Ngày đóng</p>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-gray-600" />
+                        <p className="text-sm">{formatDate(request.closedAt)}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Attachments */}
-          {request.attachments && request.attachments.length > 0 && (
+            {/* Attachments */}
+            {request.attachments && request.attachments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Paperclip className="h-5 w-5" />
+                    Tệp đính kèm ({request.attachments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {request.attachments.map((attachment, index) => {
+                      const isImage = attachment.fileType?.startsWith('image/');
+
+                      return (
+                        <div
+                          key={index}
+                          className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                        >
+                          {isImage ? (
+                            <div className="relative group cursor-pointer" onClick={() => setPreviewImage(attachment)}>
+                              <img
+                                src={attachment.url}
+                                alt={attachment.filename}
+                                className="w-full h-48 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreviewImage(attachment);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Xem
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  asChild
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <a
+                                    href={attachment.url}
+                                    download={attachment.filename}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Tải về
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-48 bg-muted">
+                              <Paperclip className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="p-3 bg-background">
+                            <p className="text-sm font-medium truncate">{attachment.filename}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-muted-foreground">
+                                {(attachment.fileSize / 1024).toFixed(2)} KB
+                              </p>
+                              {!isImage && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  asChild
+                                >
+                                  <a
+                                    href={attachment.url}
+                                    download={attachment.filename}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Message History */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Paperclip className="h-5 w-5" />
-                  Tệp đính kèm ({request.attachments.length})
+                  <MessageSquare className="h-5 w-5" />
+                  Lịch sử tin nhắn
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {request.attachments.map((attachment, index) => {
-                    const isImage = attachment.fileType?.startsWith('image/');
-                    
+                <div className="space-y-4">
+                  {/* Combined Message History */}
+                  {(() => {
+                    const combinedMessages = [
+                      ...(request.messages || []).map(m => ({ ...m, type: 'user' })),
+                      ...(request.adminResponses || []).map(r => ({ ...r, type: 'admin' }))
+                    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+                    if (combinedMessages.length === 0) {
+                      return (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Chưa có tin nhắn nào
+                        </p>
+                      );
+                    }
+
                     return (
-                      <div
-                        key={index}
-                        className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-                      >
-                        {isImage ? (
-                          <div className="relative group cursor-pointer" onClick={() => setPreviewImage(attachment)}>
-                            <img
-                              src={attachment.url}
-                              alt={attachment.filename}
-                              className="w-full h-48 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPreviewImage(attachment);
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Xem
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                asChild
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <a
-                                  href={attachment.url}
-                                  download={attachment.filename}
-                                >
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Tải về
-                                </a>
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-48 bg-muted">
-                            <Paperclip className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="p-3 bg-background">
-                          <p className="text-sm font-medium truncate">{attachment.filename}</p>
-                          <div className="flex items-center justify-between mt-1">
-                            <p className="text-xs text-muted-foreground">
-                              {(attachment.fileSize / 1024).toFixed(2)} KB
-                            </p>
-                            {!isImage && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                asChild
-                              >
-                                <a
-                                  href={attachment.url}
-                                  download={attachment.filename}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                      <div className="space-y-3">
+                        {combinedMessages.map((item, index) => {
+                          if (item.type === 'user') {
+                            return (
+                              <div key={`user-${index}`} className="border-l-4 border-blue-500 pl-4 py-2">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">{item.sender?.name}</p>
+                                    {getUserTypeBadge(item.sender?.userType)}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(item.createdAt)}
+                                  </p>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+                                {item.attachments && item.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-1">
+                                    {item.attachments.map((att, attIndex) => (
+                                      <a
+                                        key={attIndex}
+                                        href={att.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                      >
+                                        <Paperclip className="h-3 w-3" />
+                                        {att.filename}
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div key={`admin-${index}`} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">{item.adminName}</p>
+                                    <Badge variant="outline" className="bg-green-100 text-green-800">
+                                      Admin
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(item.createdAt)}
+                                  </p>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{item.response}</p>
+                                {(item.statusChange || item.priorityChange) && (
+                                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                    {item.statusChange && (
+                                      <span>
+                                        Trạng thái: {getStatusLabel(item.statusChange.from)} → {getStatusLabel(item.statusChange.to)}
+                                      </span>
+                                    )}
+                                    {item.priorityChange && (
+                                      <span>
+                                        Độ ưu tiên: {getPriorityLabel(item.priorityChange.from)} → {getPriorityLabel(item.priorityChange.to)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })}
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Message History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Lịch sử tin nhắn
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* User Messages */}
-                {request.messages && request.messages.length > 0 && (
-                  <div className="space-y-3">
-                    {request.messages.map((message, index) => (
-                      <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm">{message.sender?.name}</p>
-                            {getUserTypeBadge(message.sender?.userType)}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(message.createdAt)}
-                          </p>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        {message.attachments && message.attachments.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {message.attachments.map((att, attIndex) => (
-                              <a
-                                key={attIndex}
-                                href={att.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                              >
-                                <Paperclip className="h-3 w-3" />
-                                {att.filename}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Admin Response Form */}
+            {showResponseForm ? (
+              <AdminResponseForm
+                onSubmit={handleRespond}
+                onCancel={() => setShowResponseForm(false)}
+                loading={respondMutation.isPending}
+                currentStatus={request.status}
+                currentPriority={request.priority}
+              />
+            ) : (
+              <Button
+                onClick={() => setShowResponseForm(true)}
+                className="w-full"
+                size="lg"
+              >
+                <MessageSquare className="mr-2 h-5 w-5" />
+                Phản hồi yêu cầu
+              </Button>
+            )}
+          </div>
 
-                {/* Admin Responses */}
-                {request.adminResponses && request.adminResponses.length > 0 && (
-                  <div className="space-y-3">
-                    {request.adminResponses.map((response, index) => (
-                      <div key={index} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm">{response.adminName}</p>
-                            <Badge variant="outline" className="bg-green-100 text-green-800">
-                              Admin
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(response.createdAt)}
-                          </p>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">{response.response}</p>
-                        {(response.statusChange || response.priorityChange) && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                            {response.statusChange && (
-                              <span>
-                                Trạng thái: {getStatusLabel(response.statusChange.from)} → {getStatusLabel(response.statusChange.to)}
-                              </span>
-                            )}
-                            {response.priorityChange && (
-                              <span>
-                                Độ ưu tiên: {getPriorityLabel(response.priorityChange.from)} → {getPriorityLabel(response.priorityChange.to)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {(!request.messages || request.messages.length === 0) &&
-                  (!request.adminResponses || request.adminResponses.length === 0) && (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      Chưa có tin nhắn nào
-                    </p>
-                  )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Admin Response Form */}
-          {showResponseForm ? (
-            <AdminResponseForm
-              onSubmit={handleRespond}
-              onCancel={() => setShowResponseForm(false)}
-              loading={respondMutation.isPending}
-              currentStatus={request.status}
-              currentPriority={request.priority}
-            />
-          ) : (
-            <Button
-              onClick={() => setShowResponseForm(true)}
-              className="w-full"
-              size="lg"
-            >
-              <MessageSquare className="mr-2 h-5 w-5" />
-              Phản hồi yêu cầu
-            </Button>
-          )}
-        </div>
-
-        {/* Right Column - Controls */}
-        <div className="space-y-6">
-          {/* Status Update */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Cập nhật trạng thái</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Trạng thái</Label>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={handleStatusChange}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* pending: chỉ có thể chuyển sang in-progress, resolved, closed */}
-                    <SelectItem
-                      value="pending"
-                      disabled={request.status !== 'pending'}
-                      className={request.status !== 'pending' ? 'opacity-50' : ''}
-                    >
-                      Đang chờ
-                    </SelectItem>
-                    {/* in-progress: có thể từ pending, hoặc giữ nguyên */}
-                    <SelectItem
-                      value="in-progress"
-                      disabled={request.status === 'resolved' || request.status === 'closed'}
-                      className={request.status === 'resolved' || request.status === 'closed' ? 'opacity-50' : ''}
-                    >
-                      Đang xử lý
-                    </SelectItem>
-                    {/* resolved: có thể từ pending, in-progress */}
-                    <SelectItem
-                      value="resolved"
-                      disabled={request.status === 'closed'}
-                      className={request.status === 'closed' ? 'opacity-50' : ''}
-                    >
-                      Đã giải quyết
-                    </SelectItem>
-                    {/* closed: có thể từ bất kỳ trạng thái nào */}
-                    <SelectItem value="closed">Đã đóng</SelectItem>
-                  </SelectContent>
-                </Select>
-                {/* Hint text */}
-                <p className="text-xs text-muted-foreground">
-                  {request.status === 'resolved' && 'Yêu cầu đã giải quyết chỉ có thể đóng.'}
-                  {request.status === 'closed' && 'Yêu cầu đã đóng. Sử dụng nút "Mở lại" bên dưới.'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Reopen Button */}
-          {request.status === 'closed' && (
+          {/* Right Column - Controls */}
+          <div className="space-y-6">
+            {/* Status Update */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Mở lại yêu cầu</CardTitle>
+                <CardTitle className="text-lg">Cập nhật trạng thái</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={handleReopen}
-                  disabled={reopenMutation.isPending}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Mở lại yêu cầu
-                </Button>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Trạng thái</Label>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={handleStatusChange}
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {/* pending: chỉ có thể chuyển sang in-progress, resolved, closed */}
+                      <SelectItem
+                        value="pending"
+                        disabled={request.status !== 'pending'}
+                        className={request.status !== 'pending' ? 'opacity-50' : ''}
+                      >
+                        Đang chờ
+                      </SelectItem>
+                      {/* in-progress: có thể từ pending, hoặc giữ nguyên */}
+                      <SelectItem
+                        value="in-progress"
+                        disabled={request.status === 'resolved' || request.status === 'closed'}
+                        className={request.status === 'resolved' || request.status === 'closed' ? 'opacity-50' : ''}
+                      >
+                        Đang xử lý
+                      </SelectItem>
+                      {/* resolved: có thể từ pending, in-progress */}
+                      <SelectItem
+                        value="resolved"
+                        disabled={request.status === 'closed'}
+                        className={request.status === 'closed' ? 'opacity-50' : ''}
+                      >
+                        Đã giải quyết
+                      </SelectItem>
+                      {/* closed: có thể từ bất kỳ trạng thái nào */}
+                      <SelectItem value="closed">Đã đóng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {/* Hint text */}
+                  <p className="text-xs text-muted-foreground">
+                    {request.status === 'resolved' && 'Yêu cầu đã giải quyết chỉ có thể đóng.'}
+                    {request.status === 'closed' && 'Yêu cầu đã đóng. Sử dụng nút "Mở lại" bên dưới.'}
+                  </p>
+                </div>
               </CardContent>
             </Card>
-          )}
-        </div>
-      </div>
 
-      {/* Image Preview Dialog */}
-      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{previewImage?.filename}</DialogTitle>
-          </DialogHeader>
-          <div className="relative">
-            <img
-              src={previewImage?.url}
-              alt={previewImage?.filename}
-              className="w-full h-auto max-h-[70vh] object-contain"
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button
-                variant="outline"
-                asChild
-              >
-                <a
-                  href={previewImage?.url}
-                  download={previewImage?.filename}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Tải về
-                </a>
-              </Button>
-              <Button
-                variant="outline"
-                asChild
-              >
-                <a
-                  href={previewImage?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Mở tab mới
-                </a>
-              </Button>
-            </div>
+            {/* Reopen Button */}
+            {request.status === 'closed' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Mở lại yêu cầu</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={handleReopen}
+                    disabled={reopenMutation.isPending}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Mở lại yêu cầu
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+
+        {/* Image Preview Dialog */}
+        <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{previewImage?.filename}</DialogTitle>
+            </DialogHeader>
+            <div className="relative">
+              <img
+                src={previewImage?.url}
+                alt={previewImage?.filename}
+                className="w-full h-auto max-h-[70vh] object-contain"
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  asChild
+                >
+                  <a
+                    href={previewImage?.url}
+                    download={previewImage?.filename}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Tải về
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  asChild
+                >
+                  <a
+                    href={previewImage?.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Mở tab mới
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <ConfirmationDialog
+          open={confirmReopenOpen}
+          onOpenChange={setConfirmReopenOpen}
+          title="Mở lại yêu cầu?"
+          description="Bạn có chắc chắn muốn mở lại yêu cầu hỗ trợ này?"
+          onConfirm={executeReopen}
+          confirmText="Mở lại"
+          cancelText="Hủy"
+          isLoading={reopenMutation.isPending}
+        />
       </div>
     </DashboardLayout>
   );
