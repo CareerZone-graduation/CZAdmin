@@ -70,8 +70,17 @@ export const UserGrowthChart = () => {
       
       // Ưu tiên custom dates, nếu không có thì dùng period
       if (filters.startDate && filters.endDate) {
-        params.customStartDate = filters.startDate.toISOString();
-        params.customEndDate = filters.endDate.toISOString();
+        // Gửi ngày dạng YYYY-MM-DD để backend xử lý đúng múi giờ VN
+        const formatDate = (date) => {
+          const d = new Date(date);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        params.customStartDate = formatDate(filters.startDate);
+        params.customEndDate = formatDate(filters.endDate);
         console.log('📅 Sending custom dates:', params.customStartDate, params.customEndDate);
       } else {
         params.period = filters.period;
@@ -121,11 +130,11 @@ export const UserGrowthChart = () => {
                   onSelect={(date) => {
                     console.log('📅 StartDate clicked - raw date:', date);
                     console.log('📅 Date type:', typeof date, date instanceof Date);
-                    console.log('📅 Current filters BEFORE update:', JSON.stringify(filters, null, 2));
+                    console.log('📅 Current filters BEFORE update:', JSON.stringify(filters, null, 1));
                     if (date) {
                       setFilters(f => {
                         const newFilters = { ...f, startDate: date };
-                        console.log('📅 New filters AFTER startDate update:', JSON.stringify(newFilters, null, 2));
+                        console.log('📅 New filters AFTER startDate update:', JSON.stringify(newFilters, null, 1));
                         return newFilters;
                       });
                     }
@@ -233,8 +242,16 @@ export const RevenueChart = () => {
         };
         
         if (filters.startDate && filters.endDate) {
-          params.customStartDate = filters.startDate.toISOString();
-          params.customEndDate = filters.endDate.toISOString();
+          // Gửi ngày dạng YYYY-MM-DD
+          const formatDate = (date) => {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+          params.customStartDate = formatDate(filters.startDate);
+          params.customEndDate = formatDate(filters.endDate);
         } else {
           params.period = filters.period;
         }
@@ -576,8 +593,16 @@ export const ActivityOverviewChart = () => {
         };
         
         if (filters.startDate && filters.endDate) {
-          params.customStartDate = filters.startDate.toISOString();
-          params.customEndDate = filters.endDate.toISOString();
+          // Gửi ngày dạng YYYY-MM-DD
+          const formatDate = (date) => {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+          params.customStartDate = formatDate(filters.startDate);
+          params.customEndDate = formatDate(filters.endDate);
         } else {
           params.period = filters.period;
         }

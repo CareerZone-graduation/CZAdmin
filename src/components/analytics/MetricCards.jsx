@@ -281,9 +281,9 @@ export const EnhancedStatsCards = () => {
             color: 'purple'
           },
           {
-            title: t('dashboard.monthlyRevenue'),
-            value: `${data.monthlyRevenue.toLocaleString()} VNĐ`,
-            change: `${data.growth.revenue >= 0 ? '+' : ''}${data.growth.revenue}%`,
+            title: `Doanh thu tháng ${data.currentMonth || new Date().getMonth() + 1}`,
+            value: `${(data.currentMonthRevenue || 0).toLocaleString()} VNĐ`,
+            change: `${data.growth.revenue >= 0 ? '+' : ''}${data.growth.revenue}% so với tháng trước`,
             trend: data.growth.revenue >= 0 ? 'up' : 'down',
             icon: DollarSign,
             color: 'orange'

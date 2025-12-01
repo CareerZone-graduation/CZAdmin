@@ -62,14 +62,21 @@ export const RevenueOverTimeChart = () => {
         setLoading(true);
         setError(null);
 
-        // Tạo params với custom dates
+        // Tạo params với custom dates - format YYYY-MM-DD
         const params = {
           granularity: filters.granularity
         };
 
         if (filters.startDate && filters.endDate) {
-          params.customStartDate = filters.startDate.toISOString();
-          params.customEndDate = filters.endDate.toISOString();
+          // Format ngày thành YYYY-MM-DD để backend xử lý đúng timezone VN
+          const formatDateToYMD = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+          params.customStartDate = formatDateToYMD(filters.startDate);
+          params.customEndDate = formatDateToYMD(filters.endDate);
         } else {
           params.period = filters.period;
         }
