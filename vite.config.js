@@ -27,13 +27,13 @@ export default defineConfig(({ mode }) => {
       port: 3200,
       open: true,
       host: true,
-      proxy: {
-        "/api": {
-          target: env.VITE_API_BASE_URL,
-          changeOrigin: true,
-          secure: false,
-        },
-      },
+      // proxy: {
+      //   "/api": {
+      //     target: env.VITE_API_BASE_URL,
+      //     changeOrigin: true,
+      //     secure: false,
+      //   },
+      // },
     },
 
     build: {
