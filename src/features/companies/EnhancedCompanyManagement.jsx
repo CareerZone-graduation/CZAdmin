@@ -7,13 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination } from '@/components/common/Pagination';
 import { t } from '@/constants/translations';
-import { 
-  Check, 
-  X, 
-  Search, 
-  Building2, 
-  Globe, 
-  Users, 
+import {
+  Check,
+  X,
+  Search,
+  Building2,
+  Globe,
+  Users,
   Calendar,
   ExternalLink,
   MapPin,
@@ -51,7 +51,7 @@ export function EnhancedCompanyManagement() {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isConfirmingReapproval, setIsConfirmingReapproval] = useState(false);
-  
+
   // Reset to page 1 when filters change
   useEffect(() => {
     if (currentPage !== 1) {
@@ -70,46 +70,41 @@ export function EnhancedCompanyManagement() {
         if (searchTerm) params.search = searchTerm;
         if (statusFilter !== 'all') params.status = statusFilter;
         if (industryFilter !== 'all') params.industry = industryFilter;
-        
+
         const companyResponse = await getAllCompaniesForAdmin(params);
         if (companyResponse && companyResponse.data && companyResponse.data.success) {
           const { data, meta } = companyResponse.data;
           const transformedData = data
             .filter(item => item.company && item.company.name)
             .map(item => ({
-            id: item._id,
-            name: item.company.name,
-            description: item.company.about,
-            logo: item.company.logo,
-            email: item.company.contactInfo.email,
-            phone: item.company.contactInfo.phone,
-            website: item.company.website,
-            industry: item.company.industry,
-            size: item.company.size,
-            founded: 'N/A', // Not in API response
-            revenue: 'N/A', // Not in API response
-            status: item.company.status,
-            verified: item.company.verified,
-            rejectionReason: item.company.rejectReason,
-            location: {
-              street: item.company.address.street || 'N/A',
-              city: item.company.address.city || 'N/A',
-              state: item.company.address.state || 'N/A',
-              zipCode: item.company.address.zipCode || 'N/A',
-              country: item.company.address.country || 'N/A',
-            },
-            rating: 4.5, // Placeholder
-            reviewCount: 120, // Placeholder
-            jobPostings: 15, // Placeholder
-            totalApplications: 2500, // Placeholder
-            hiringRate: 65, // Placeholder
-            responseTime: '2 days', // Placeholder
-            documents: [ // Placeholder
-              { type: 'business_registration', status: 'approved', url: item.company.businessRegistrationUrl },
-              { type: 'tax_id', status: 'approved', url: '#' }
-            ],
-            tags: ['Tech', 'Innovative', 'Fast-paced'], // Placeholder
-          }));
+              id: item._id,
+              name: item.company.name,
+              description: item.company.about,
+              logo: item.company.logo,
+              email: item.company.contactInfo.email,
+              phone: item.company.contactInfo.phone,
+              website: item.company.website,
+              industry: item.company.industry,
+              size: item.company.size,
+              founded: 'N/A', // Not in API response
+              revenue: 'N/A', // Not in API response
+              status: item.company.status,
+              verified: item.company.verified,
+              rejectionReason: item.company.rejectReason,
+              location: {
+                street: item.company.address.street || 'N/A',
+                city: item.company.address.city || 'N/A',
+                state: item.company.address.state || 'N/A',
+                zipCode: item.company.address.zipCode || 'N/A',
+                country: item.company.address.country || 'N/A',
+              },
+              jobPostings: item.activeJobs || 0,
+              totalApplications: item.totalApplications || 0,
+              documents: [ // Placeholder
+                { type: 'business_registration', status: 'approved', url: item.company.businessRegistrationUrl },
+                { type: 'tax_id', status: 'approved', url: '#' }
+              ],
+            }));
           setCompanies(transformedData);
           setTotalPages(meta.totalPages);
         }
@@ -152,10 +147,10 @@ export function EnhancedCompanyManagement() {
       approved: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle, label: t('companies.statusApproved') },
       rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle, label: t('companies.statusRejected') }
     };
-    
+
     const style = statusStyles[status] || statusStyles.pending;
     const Icon = style.icon;
-    
+
     return (
       <Badge className={`${style.bg} ${style.text} flex items-center space-x-1`}>
         <Icon className="w-3 h-3" />
@@ -180,24 +175,24 @@ export function EnhancedCompanyManagement() {
     try {
       let res;
       if (action === 'approved') {
-        res=await approveCompany(companyId);
+        res = await approveCompany(companyId);
       } else if (action === 'rejected') {
-        res=await rejectCompany(companyId, reason);
+        res = await rejectCompany(companyId, reason);
       }
 
       setCompanies(prev => prev.map(company =>
         company.id === companyId
           ? {
-              ...company,
-              status: action,
-              verified: action === 'approved',
-              rejectionReason: action === 'rejected' ? reason : null
-            }
+            ...company,
+            status: action,
+            verified: action === 'approved',
+            rejectionReason: action === 'rejected' ? reason : null
+          }
           : company
       ));
       const actionText = action === 'approved' ? 'approved' : 'rejected';
       toast.success(res.data?.message || `Company ${actionText} successfully.`);
-      
+
       // Refresh stats after action
       try {
         console.log('🔄 Refreshing company stats after action...');
@@ -230,7 +225,7 @@ export function EnhancedCompanyManagement() {
 
   // Handle bulk actions
   const handleBulkAction = (action) => {
-    const updatedCompanies = companies.map(company => 
+    const updatedCompanies = companies.map(company =>
       bulkSelection.has(company.id)
         ? { ...company, status: action, verified: action === 'approved' }
         : company
@@ -343,7 +338,7 @@ export function EnhancedCompanyManagement() {
               <p>Last Recharge: {detailedData.rechargeStats.lastRechargeDate ? new Date(detailedData.rechargeStats.lastRechargeDate).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
-           {/* Document Status */}
+          {/* Document Status */}
           <div>
             <h3 className="font-semibold mb-3">Document Verification</h3>
             <a href={detailedData.company.businessRegistrationUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Business Registration</a>
@@ -355,33 +350,33 @@ export function EnhancedCompanyManagement() {
 
       <DialogFooter className="space-x-2">
         {company.status === 'pending' && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsRejecting(true);
-                setSelectedCompany(company);
-              }}
-              className="text-red-600 border-red-600 hover:bg-red-50"
-            >
-              <X className="w-4 h-4 mr-2" />
-              Reject
-            </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsRejecting(true);
+              setSelectedCompany(company);
+            }}
+            className="text-red-600 border-red-600 hover:bg-red-50"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Reject
+          </Button>
         )}
         {(company.status === 'pending' || company.status === 'rejected') && (
-            <Button
-              onClick={() => {
-                if (company.status === 'rejected') {
-                  setIsConfirmingReapproval(true);
-                } else {
-                  handleCompanyAction(company.id, 'approved');
-                  onClose();
-                }
-              }}
-              className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              {company.status === 'rejected' ? 'Xem xét lại' : 'Approve'}
-            </Button>
+          <Button
+            onClick={() => {
+              if (company.status === 'rejected') {
+                setIsConfirmingReapproval(true);
+              } else {
+                handleCompanyAction(company.id, 'approved');
+                onClose();
+              }
+            }}
+            className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+          >
+            <Check className="w-4 h-4 mr-2" />
+            {company.status === 'rejected' ? 'Xem xét lại' : 'Approve'}
+          </Button>
         )}
         <Button variant="outline" onClick={onClose}>
           Close
@@ -399,7 +394,7 @@ export function EnhancedCompanyManagement() {
           <p className="text-gray-600">{t('companies.description')}</p>
         </div>
         <div className="flex items-center space-x-3">
-          
+
           {bulkSelection.size > 0 && (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">{bulkSelection.size} {t('companies.selected')}</span>
@@ -549,15 +544,15 @@ export function EnhancedCompanyManagement() {
                           <Building2 className="w-8 h-8 text-blue-600" />
                         )}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold">{company.name}</h3>
                           {getStatusBadge(company.status)}
                         </div>
-                        
+
                         <p className="text-gray-600 mb-3 line-clamp-2">{company.description}</p>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-500">
                           <div className="flex items-center space-x-2">
                             <Mail className="w-4 h-4" />
@@ -581,15 +576,11 @@ export function EnhancedCompanyManagement() {
                         <div className="flex items-center space-x-6 mt-3 text-sm">
                           <div className="flex items-center space-x-1">
                             <TrendingUp className="w-4 h-4 text-green-600" />
-                            <span>{company.jobPostings} jobs</span>
+                            <span>{company.jobPostings} việc làm đang tuyển</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Star className="w-4 h-4 text-yellow-500" />
-                            <span>{company.rating}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            <span>{company.responseTime}</span>
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <span>{company.totalApplications} đơn ứng tuyển</span>
                           </div>
                         </div>
                       </div>
@@ -614,46 +605,46 @@ export function EnhancedCompanyManagement() {
                           />
                         )}
                       </Dialog>
-                      
-                      <Button 
-                        size="sm" 
+
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => window.open(`/companies/${company.id}`, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
                         {t('companies.viewCompanyPage')}
                       </Button>
-                      
+
                       {company.status === 'pending' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setIsRejecting(true);
-                              setSelectedCompany(company);
-                            }}
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            {t('common.reject')}
-                          </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setIsRejecting(true);
+                            setSelectedCompany(company);
+                          }}
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          {t('common.reject')}
+                        </Button>
                       )}
                       {(company.status === 'pending' || company.status === 'rejected') && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCompany(company);
-                              if (company.status === 'rejected') {
-                                setIsConfirmingReapproval(true);
-                              } else {
-                                handleCompanyAction(company.id, 'approved');
-                              }
-                            }}
-                            className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
-                          >
-                            <Check className="w-4 h-4 mr-1" />
-                            {company.status === 'rejected' ? t('companies.reconsider') : t('common.approve')}
-                          </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCompany(company);
+                            if (company.status === 'rejected') {
+                              setIsConfirmingReapproval(true);
+                            } else {
+                              handleCompanyAction(company.id, 'approved');
+                            }
+                          }}
+                          className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          {company.status === 'rejected' ? t('companies.reconsider') : t('common.approve')}
+                        </Button>
                       )}
                     </div>
                   </div>

@@ -116,20 +116,23 @@ export function CompanyJobsSection({ companyId }) {
   };
 
   const getStatusBadge = (job) => {
-    if (!job.approved) {
+    if (job.status === 'INACTIVE') {
+      return <Badge variant="secondary" className="bg-gray-200 text-gray-700 hover:bg-gray-300">Ngừng tuyển dụng</Badge>;
+    }
+
+    if (job.status === 'EXPIRED') {
+      return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Hết hạn nộp</Badge>;
+    }
+
+    if (job.moderationStatus === 'PENDING') {
       return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Chờ duyệt</Badge>;
     }
 
-    switch (job.status) {
-      case 'ACTIVE':
-        return <Badge className="bg-green-100 text-green-800">Đang hoạt động</Badge>;
-      case 'EXPIRED':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-600">Hết hạn</Badge>;
-      case 'INACTIVE':
-        return <Badge variant="destructive">Không hoạt động</Badge>;
-      default:
-        return null;
+    if (job.status === 'ACTIVE') {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Đang tuyển dụng</Badge>;
     }
+
+    return null;
   };
 
   const renderJobCard = (job) => (
@@ -235,10 +238,10 @@ export function CompanyJobsSection({ companyId }) {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">Tất cả</TabsTrigger>
-              <TabsTrigger value="active">Đang hoạt động</TabsTrigger>
-              <TabsTrigger value="expired">Hết hạn</TabsTrigger>
+              <TabsTrigger value="active">Đang tuyển dụng</TabsTrigger>
+              <TabsTrigger value="expired">Hết hạn nộp</TabsTrigger>
               <TabsTrigger value="pending">Chờ duyệt</TabsTrigger>
-              <TabsTrigger value="inactive">Không hoạt động</TabsTrigger>
+              <TabsTrigger value="inactive">Ngừng tuyển dụng (Đã ẩn)</TabsTrigger>
             </TabsList>
 
             <div className="flex flex-col md:flex-row gap-4">
