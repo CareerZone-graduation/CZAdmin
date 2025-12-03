@@ -23,7 +23,6 @@ import {
   Clock,
   FileText,
   Filter,
-  Eye,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -33,7 +32,7 @@ import {
 } from 'lucide-react';
 import { industryEnum } from '@/lib/schemas';
 import { toast } from 'sonner';
-import { getAllCompaniesForAdmin, getSystemStats, getCompanyStats, approveCompany, rejectCompany, getCompanyProfile } from '@/services/companyService';
+import { getAllCompaniesForAdmin, getSystemStats, getCompanyStats, approveCompany, rejectCompany } from '@/services/companyService';
 
 export function EnhancedCompanyManagement() {
   const [companies, setCompanies] = useState([]);
@@ -45,8 +44,6 @@ export function EnhancedCompanyManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [detailedCompany, setDetailedCompany] = useState(null);
-  const [bulkSelection, setBulkSelection] = useState(new Set());
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, verified: 0 });
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -223,168 +220,6 @@ export function EnhancedCompanyManagement() {
     }
   };
 
-  // Handle bulk actions
-  const handleBulkAction = (action) => {
-    const updatedCompanies = companies.map(company =>
-      bulkSelection.has(company.id)
-        ? { ...company, status: action, verified: action === 'approved' }
-        : company
-    );
-    setCompanies(updatedCompanies);
-    setBulkSelection(new Set());
-    toast.success(`${bulkSelection.size} companies ${action} successfully`);
-  };
-
-  // Toggle bulk selection
-  const toggleBulkSelection = (companyId) => {
-    const newSelection = new Set(bulkSelection);
-    if (newSelection.has(companyId)) {
-      newSelection.delete(companyId);
-    } else {
-      newSelection.add(companyId);
-    }
-    setBulkSelection(newSelection);
-  };
-
-  const handleViewDetails = async (company) => {
-    setSelectedCompany(company);
-    try {
-      const res = await getCompanyProfile(company.id);
-      if (res.data?.success) {
-        setDetailedCompany(res.data.data);
-      } else {
-        toast.error("Failed to load company details.");
-      }
-    } catch (error) {
-      toast.error("Failed to load company details.");
-      console.error("Failed to fetch company details:", error);
-    }
-  };
-
-  // Company Detail Modal Component
-  const CompanyDetailModal = ({ company, detailedData, onClose }) => (
-    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            {company.logo ? (
-              <img src={company.logo} alt={company.name} className="w-full h-full object-cover rounded-lg" />
-            ) : (
-              <Building2 className="w-6 h-6 text-blue-600" />
-            )}
-          </div>
-          <div>
-            <span className="text-xl font-semibold">{company.name}</span>
-            {getStatusBadge(company.status)}
-          </div>
-        </DialogTitle>
-        <DialogDescription>
-          Thông tin chi tiết về công ty và người đăng ký
-        </DialogDescription>
-      </DialogHeader>
-
-      {detailedData ? (
-        <div className="space-y-6">
-          {/* Recruiter Info */}
-          <div>
-            <h3 className="font-semibold mb-3">Recruiter Information</h3>
-            <div className="space-y-2 text-sm">
-              <p><strong>Fullname:</strong> {detailedData.recruiterInfo.fullname}</p>
-              <p><strong>Email:</strong> {detailedData.recruiterInfo.email}</p>
-              <p><strong>User Created At:</strong> {new Date(detailedData.recruiterInfo.userCreatedAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-          {/* Company Info */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold mb-3">Company Information</h3>
-              <div className="space-y-2 text-sm">
-                <p><strong>Industry:</strong> {detailedData.company.industry}</p>
-                <p><strong>Size:</strong> {detailedData.company.size}</p>
-                <p><strong>Tax Code:</strong> {detailedData.company.taxCode}</p>
-                <p><strong>Website:</strong> <a href={detailedData.company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{detailedData.company.website}</a></p>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3">Contact & Location</h3>
-              <div className="space-y-2 text-sm">
-                <p><strong>Email:</strong> {detailedData.company.contactInfo.email}</p>
-                <p><strong>Phone:</strong> {detailedData.company.contactInfo.phone}</p>
-                <p><strong>Address:</strong> {`${detailedData.company.location.ward || ''}, ${detailedData.company.location.province || ''}`}</p>
-              </div>
-            </div>
-          </div>
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <h3 className="font-semibold mb-3">Job Stats</h3>
-              <p>Total Jobs: {detailedData.jobStats.totalJobs}</p>
-              <p>Recruiting: {detailedData.jobStats.recruitingJobs}</p>
-              <p>Pending: {detailedData.jobStats.pendingJobs}</p>
-              <p>Expired: {detailedData.jobStats.expiredJobs}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3">Application Stats</h3>
-              <p>Total: {detailedData.applicationStats.total}</p>
-              <p>Pending: {detailedData.applicationStats.pending}</p>
-              <p>Accepted: {detailedData.applicationStats.accepted}</p>
-              <p>Rejected: {detailedData.applicationStats.rejected}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3">Recharge Stats</h3>
-              <p>Total Paid: {detailedData.rechargeStats.totalAmountPaid}</p>
-              <p>Total Coins: {detailedData.rechargeStats.totalCoinsRecharged}</p>
-              <p>Count: {detailedData.rechargeStats.rechargeCount}</p>
-              <p>Last Recharge: {detailedData.rechargeStats.lastRechargeDate ? new Date(detailedData.rechargeStats.lastRechargeDate).toLocaleDateString() : 'N/A'}</p>
-            </div>
-          </div>
-          {/* Document Status */}
-          <div>
-            <h3 className="font-semibold mb-3">Document Verification</h3>
-            <a href={detailedData.company.businessRegistrationUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Business Registration</a>
-          </div>
-        </div>
-      ) : (
-        <p>Loading details...</p>
-      )}
-
-      <DialogFooter className="space-x-2">
-        {company.status === 'pending' && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsRejecting(true);
-              setSelectedCompany(company);
-            }}
-            className="text-red-600 border-red-600 hover:bg-red-50"
-          >
-            <X className="w-4 h-4 mr-2" />
-            Reject
-          </Button>
-        )}
-        {(company.status === 'pending' || company.status === 'rejected') && (
-          <Button
-            onClick={() => {
-              if (company.status === 'rejected') {
-                setIsConfirmingReapproval(true);
-              } else {
-                handleCompanyAction(company.id, 'approved');
-                onClose();
-              }
-            }}
-            className={company.status === 'rejected' ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
-          >
-            <Check className="w-4 h-4 mr-2" />
-            {company.status === 'rejected' ? 'Xem xét lại' : 'Approve'}
-          </Button>
-        )}
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -392,20 +227,6 @@ export function EnhancedCompanyManagement() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('companies.title')}</h1>
           <p className="text-gray-600">{t('companies.description')}</p>
-        </div>
-        <div className="flex items-center space-x-3">
-
-          {bulkSelection.size > 0 && (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">{bulkSelection.size} {t('companies.selected')}</span>
-              <Button size="sm" onClick={() => handleBulkAction('approved')} className="bg-green-600 hover:bg-green-700">
-                {t('companies.bulkApprove')}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleBulkAction('rejected')}>
-                {t('companies.bulkReject')}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -527,12 +348,6 @@ export function EnhancedCompanyManagement() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4">
-                      <input
-                        type="checkbox"
-                        className="mt-2"
-                        checked={bulkSelection.has(company.id)}
-                        onChange={() => toggleBulkSelection(company.id)}
-                      />
                       <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center overflow-hidden">
                         {company.logo ? (
                           <img
@@ -587,25 +402,6 @@ export function EnhancedCompanyManagement() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={() => handleViewDetails(company)}>
-                            <Eye className="w-4 h-4 mr-1" />
-                            {t('companies.viewDetails')}
-                          </Button>
-                        </DialogTrigger>
-                        {selectedCompany && selectedCompany.id === company.id && (
-                          <CompanyDetailModal
-                            company={selectedCompany}
-                            detailedData={detailedCompany}
-                            onClose={() => {
-                              setSelectedCompany(null);
-                              setDetailedCompany(null);
-                            }}
-                          />
-                        )}
-                      </Dialog>
-
                       <Button
                         size="sm"
                         variant="outline"

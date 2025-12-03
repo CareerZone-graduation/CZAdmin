@@ -116,16 +116,16 @@ export function CompanyJobsSection({ companyId }) {
   };
 
   const getStatusBadge = (job) => {
+    if (job.moderationStatus === 'PENDING') {
+      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Chờ duyệt</Badge>;
+    }
+
     if (job.status === 'INACTIVE') {
       return <Badge variant="secondary" className="bg-gray-200 text-gray-700 hover:bg-gray-300">Ngừng tuyển dụng</Badge>;
     }
 
     if (job.status === 'EXPIRED') {
       return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Hết hạn nộp</Badge>;
-    }
-
-    if (job.moderationStatus === 'PENDING') {
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Chờ duyệt</Badge>;
     }
 
     if (job.status === 'ACTIVE') {
