@@ -37,15 +37,24 @@ export function UserStats() {
   }, []);
 
   if (loading) {
+    const gradients = [
+      "bg-gradient-to-br from-blue-500/50 to-blue-600/50",
+      "bg-gradient-to-br from-green-500/50 to-green-600/50",
+      "bg-gradient-to-br from-orange-500/50 to-orange-600/50",
+      "bg-gradient-to-br from-yellow-500/50 to-yellow-600/50",
+      "bg-gradient-to-br from-red-500/50 to-red-600/50",
+      "bg-gradient-to-br from-purple-500/50 to-purple-600/50",
+    ];
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-2/3" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-1/2" />
+        {gradients.map((gradient, i) => (
+          <Card key={i} className={`${gradient} border-0 shadow-lg rounded-2xl`}>
+            <CardContent className="p-5 text-center">
+              <div className="flex justify-center mb-2">
+                <Skeleton className="w-7 h-7 rounded-full bg-white/30" />
+              </div>
+              <Skeleton className="h-8 w-16 mx-auto mb-1 bg-white/30" />
+              <Skeleton className="h-3 w-20 mx-auto bg-white/20" />
             </CardContent>
           </Card>
         ))}

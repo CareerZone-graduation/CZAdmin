@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
 import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob } from '@/services/jobService';
+import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
 import { Pagination } from '@/components/common/Pagination';
@@ -19,19 +22,24 @@ import {
   DollarSign,
   Eye,
   Check,
-  X
+  X,
+  ChevronsUpDown
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function JobManagement() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // Input value
+  const [searchTerm, setSearchTerm] = useState(''); // Actual search term for API
   const [statusFilter, setStatusFilter] = useState('all');
   const [companyFilter, setCompanyFilter] = useState('');
   const [sortFilter, setSortFilter] = useState('createdAt_desc');
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [companySearchOpen, setCompanySearchOpen] = useState(false);
   const [meta, setMeta] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -39,12 +47,33 @@ export function JobManagement() {
     limit: 10
   });
 
+  // Fetch companies for filter dropdown
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await getAllCompaniesForAdmin({ limit: 1000 });
+        if (response.data?.success) {
+          const companyList = response.data.data
+            .filter(item => item.company && item.company.name)
+            .map(item => ({
+              id: item._id,
+              name: item.company.name
+            }));
+          setCompanies(companyList);
+        }
+      } catch (error) {
+        console.error('Failed to fetch companies:', error);
+      }
+    };
+    fetchCompanies();
+  }, []);
+
   // Fetch jobs from API
   const fetchJobs = useCallback(async (page = meta.currentPage) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const queryParams = {
         page: page,
         limit: meta.limit
@@ -77,19 +106,37 @@ export function JobManagement() {
     fetchJobs(1);
   }, [searchTerm, statusFilter, companyFilter, sortFilter]);
 
+  // Handle search button click
+  const handleSearch = () => {
+    setSearchTerm(searchInput.trim());
+  };
+
+  // Handle Enter key press in search input
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearchTerm('');
+  };
+
 
   const handleStatusChange = useCallback(async (jobId, newStatus) => {
     try {
       setLoading(true);
       await updateJobStatus(jobId, newStatus);
-      
+
       const statusMessages = {
         active: 'Đã phê duyệt công việc',
         inactive: 'Đã từ chối công việc',
         pending: 'Đã đưa công việc về trạng thái chờ duyệt'
       };
       toast.success(statusMessages[newStatus] || 'Đã cập nhật trạng thái công việc');
-      
+
       // Refresh danh sách công việc từ server để cập nhật số liệu
       await fetchJobs();
     } catch (error) {
@@ -103,9 +150,9 @@ export function JobManagement() {
     try {
       setLoading(true);
       await activateJob(jobId);
-      
+
       toast.success('Đã kích hoạt lại công việc');
-      
+
       // Refresh danh sách công việc từ server để cập nhật số liệu
       await fetchJobs();
     } catch (error) {
@@ -119,12 +166,12 @@ export function JobManagement() {
     try {
       setLoading(true);
       await deactivateJob(jobId);
-      
+
       // Update local state
-      setJobs(prev => prev.map(job => 
+      setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, status: 'INACTIVE' } : job
       ));
-      
+
       toast.success('Đã vô hiệu hóa công việc');
     } catch (error) {
       toast.error(error.message || 'Không thể vô hiệu hóa công việc');
@@ -137,12 +184,12 @@ export function JobManagement() {
     try {
       setLoading(true);
       await approveJob(jobId);
-      
+
       // Update local state
-      setJobs(prev => prev.map(job => 
+      setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, approved: true } : job
       ));
-      
+
       toast.success('Đã phê duyệt công việc');
     } catch (error) {
       toast.error(error.message || 'Không thể phê duyệt công việc');
@@ -155,12 +202,12 @@ export function JobManagement() {
     try {
       setLoading(true);
       await rejectJob(jobId);
-      
+
       // Update local state
-      setJobs(prev => prev.map(job => 
+      setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, approved: false, status: 'INACTIVE' } : job
       ));
-      
+
       toast.success('Đã từ chối công việc');
     } catch (error) {
       toast.error(error.message || 'Không thể từ chối công việc');
@@ -184,7 +231,7 @@ export function JobManagement() {
     if (approved === false) {
       return <Badge className="bg-yellow-100 text-yellow-800">Chờ duyệt</Badge>;
     }
-    
+
     switch (status) {
       case 'ACTIVE':
         return <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>;
@@ -218,16 +265,91 @@ export function JobManagement() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Tìm kiếm theo tiêu đề, kỹ năng..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10 pr-20"
               />
+              <div className="absolute right-2 top-2 flex gap-1">
+                {searchInput && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleClearSearch}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={handleSearch}
+                  disabled={loading}
+                  className="h-6 px-2 text-xs"
+                >
+                  Tìm
+                </Button>
+              </div>
             </div>
-             <Input
-                placeholder="Lọc theo công ty..."
-                value={companyFilter}
-                onChange={(e) => setCompanyFilter(e.target.value)}
-              />
+            <Popover open={companySearchOpen} onOpenChange={setCompanySearchOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={companySearchOpen}
+                  className="w-full justify-between"
+                >
+                  {companyFilter
+                    ? companies.find((company) => company.id === companyFilter)?.name
+                    : "Lọc theo công ty..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0">
+                <Command>
+                  <CommandInput placeholder="Tìm công ty..." />
+                  <CommandList>
+                    <CommandEmpty>Không tìm thấy công ty.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => {
+                          setCompanyFilter('');
+                          setCompanySearchOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            companyFilter === '' ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        Tất cả công ty
+                      </CommandItem>
+                      {companies.map((company) => (
+                        <CommandItem
+                          key={company.id}
+                          value={`${company.id}-${company.name}`}
+                          keywords={[company.name]}
+                          onSelect={() => {
+                            setCompanyFilter(company.id);
+                            setCompanySearchOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              companyFilter === company.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {company.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Lọc theo trạng thái" />

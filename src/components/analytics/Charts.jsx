@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getUserGrowth, getRevenueTrends, getUserDemographics, getJobCategories } from '@/services/analyticsService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getCategoryLabel, getRoleLabel } from '@/constants/jobCategories';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -230,6 +231,7 @@ export const RevenueChart = () => {
     startDate: defaultRange.startDate,
     endDate: defaultRange.endDate
   });
+  const [activePreset, setActivePreset] = useState('thisMonth'); // Track active preset
 
   useEffect(() => {
     const fetchData = async () => {
@@ -294,7 +296,16 @@ export const RevenueChart = () => {
         return;
     }
 
+    setActivePreset(preset);
     setFilters(f => ({ ...f, startDate, endDate }));
+  };
+
+  // Handle manual date selection - clear active preset
+  const handleDateChange = (field, date) => {
+    if (date) {
+      setActivePreset(null); // Clear preset when manually selecting dates
+      setFilters(f => ({ ...f, [field]: date }));
+    }
   };
 
   return (
@@ -313,7 +324,7 @@ export const RevenueChart = () => {
             {/* Quick preset buttons */}
             <div className="flex gap-1">
               <Button
-                variant="outline"
+                variant={activePreset === '7d' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setPresetRange('7d')}
                 className="text-xs h-8"
@@ -321,7 +332,7 @@ export const RevenueChart = () => {
                 7 ngày
               </Button>
               <Button
-                variant="outline"
+                variant={activePreset === '30d' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setPresetRange('30d')}
                 className="text-xs h-8"
@@ -329,7 +340,7 @@ export const RevenueChart = () => {
                 30 ngày
               </Button>
               <Button
-                variant="outline"
+                variant={activePreset === '90d' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setPresetRange('90d')}
                 className="text-xs h-8"
@@ -337,7 +348,7 @@ export const RevenueChart = () => {
                 90 ngày
               </Button>
               <Button
-                variant="outline"
+                variant={activePreset === 'thisMonth' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setPresetRange('thisMonth')}
                 className="text-xs h-8"
@@ -345,7 +356,7 @@ export const RevenueChart = () => {
                 Tháng này
               </Button>
               <Button
-                variant="outline"
+                variant={activePreset === 'lastMonth' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setPresetRange('lastMonth')}
                 className="text-xs h-8"
@@ -361,7 +372,10 @@ export const RevenueChart = () => {
               {/* Chọn ngày bắt đầu */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="text-xs h-8 flex items-center gap-2">
+                  <Button 
+                    variant={activePreset ? "outline" : "default"} 
+                    className="text-xs h-8 flex items-center gap-2"
+                  >
                     <CalendarIcon className="w-3 h-3" />
                     {filters.startDate ? format(filters.startDate, "dd/MM/yyyy") : "Ngày bắt đầu"}
                   </Button>
@@ -370,11 +384,7 @@ export const RevenueChart = () => {
                   <Calendar
                     mode="single"
                     selected={filters.startDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setFilters(f => ({ ...f, startDate: date }));
-                      }
-                    }}
+                    onSelect={(date) => handleDateChange('startDate', date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -383,7 +393,10 @@ export const RevenueChart = () => {
               {/* Chọn ngày kết thúc */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="text-xs h-8 flex items-center gap-2">
+                  <Button 
+                    variant={activePreset ? "outline" : "default"} 
+                    className="text-xs h-8 flex items-center gap-2"
+                  >
                     <CalendarIcon className="w-3 h-3" />
                     {filters.endDate ? format(filters.endDate, "dd/MM/yyyy") : "Ngày kết thúc"}
                   </Button>
@@ -392,11 +405,7 @@ export const RevenueChart = () => {
                   <Calendar
                     mode="single"
                     selected={filters.endDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setFilters(f => ({ ...f, endDate: date }));
-                      }
-                    }}
+                    onSelect={(date) => handleDateChange('endDate', date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -439,7 +448,12 @@ export const UserDemographicsChart = () => {
       try {
         setLoading(true);
         const response = await getUserDemographics();
-        setData(response.data.data);
+        // Map role names to Vietnamese
+        const mappedData = response.data.data.map(item => ({
+          ...item,
+          name: getRoleLabel(item.name)
+        }));
+        setData(mappedData);
       } catch (err) {
         setError('Failed to fetch user demographics.');
         console.error(err);
@@ -512,7 +526,13 @@ export const JobCategoriesChart = () => {
       try {
         setLoading(true);
         const response = await getJobCategories();
-        setData(response.data.data);
+        // Map category names to Vietnamese
+        const mappedData = response.data.data.map(item => ({
+          ...item,
+          categoryVi: getCategoryLabel(item.category),
+          category: item.category // Keep original for reference
+        }));
+        setData(mappedData);
       } catch (err) {
         setError('Failed to fetch job categories.');
         console.error(err);
@@ -540,7 +560,7 @@ export const JobCategoriesChart = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis type="number" stroke="#6b7280" fontSize={12} />
               <YAxis 
-                dataKey="category" 
+                dataKey="categoryVi" 
                 type="category" 
                 stroke="#6b7280" 
                 fontSize={11} 

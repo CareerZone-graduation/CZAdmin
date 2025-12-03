@@ -52,6 +52,13 @@ export function EnhancedCompanyManagement() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isConfirmingReapproval, setIsConfirmingReapproval] = useState(false);
   
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, statusFilter, industryFilter, sortOption]);
+
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
