@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Building2, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
+import {
+  Building2,
+  MapPin,
+  Clock,
+  DollarSign,
   Calendar,
   User,
   Mail,
@@ -52,10 +52,10 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
       INACTIVE: { label: 'Không hoạt động', variant: 'secondary', icon: XCircle },
       EXPIRED: { label: 'Hết hạn', variant: 'destructive', icon: AlertTriangle }
     };
-    
+
     const config = statusMap[status] || { label: status, variant: 'outline', icon: AlertTriangle };
     const Icon = config.icon;
-    
+
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="w-3 h-3" />
@@ -111,13 +111,13 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
 
   const formatSalary = (minSalary, maxSalary) => {
     if (!minSalary && !maxSalary) return 'Thỏa thuận';
-    
+
     const formatNumber = (num) => {
       if (!num) return '';
       const value = parseFloat(num.$numberDecimal || num);
       return value.toLocaleString('vi-VN');
     };
-    
+
     if (minSalary && maxSalary) {
       return `${formatNumber(minSalary)} - ${formatNumber(maxSalary)} VNĐ`;
     }
@@ -127,7 +127,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
   if (loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Chi tiết công việc</DialogTitle>
             <DialogDescription>Đang tải thông tin chi tiết về công việc này</DialogDescription>
@@ -212,20 +212,20 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{job.title}</DialogTitle>
           <DialogDescription>Thông tin chi tiết về vị trí công việc và yêu cầu tuyển dụng</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Header với thông tin cơ bản */}
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={job.recruiterProfileId?.company?.logo || '/placeholder-logo.svg'} 
+                  <img
+                    src={job.recruiterProfileId?.company?.logo || '/placeholder-logo.svg'}
                     alt={job.recruiterProfileId?.company?.name}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
@@ -269,139 +269,143 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
             </CardContent>
           </Card>
 
-          {/* Thông tin chi tiết */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Mô tả công việc */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Mô tả công việc</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-line text-sm leading-relaxed">
-                  {job.description}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Yêu cầu */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Yêu cầu công việc</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-line text-sm leading-relaxed">
-                  {job.requirements}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quyền lợi */}
-            {job.benefits && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content: Description, Requirements, Benefits */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Mô tả công việc */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Quyền lợi</CardTitle>
+                  <CardTitle className="text-lg">Mô tả công việc</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="whitespace-pre-line text-sm leading-relaxed">
-                    {job.benefits}
+                    {job.description}
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Thông tin bổ sung */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Thông tin bổ sung</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Danh mục:</span>
-                  <span className="font-medium">{getCategoryLabel(job.category)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Kinh nghiệm:</span>
-                  <span className="font-medium">{getExperienceLevel(job.experience)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Hình thức làm việc:</span>
-                  <span className="font-medium">{getWorkTypeBadge(job.workType)}</span>
-                </div>
-                {job.address && (
+              {/* Yêu cầu */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Yêu cầu công việc</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="whitespace-pre-line text-sm leading-relaxed">
+                    {job.requirements}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quyền lợi */}
+              {job.benefits && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quyền lợi</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="whitespace-pre-line text-sm leading-relaxed">
+                      {job.benefits}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Sidebar: Additional Info & Recruiter Info */}
+            <div className="space-y-6">
+              {/* Thông tin bổ sung */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Thông tin bổ sung</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Địa chỉ:</span>
-                    <span className="font-medium text-right">{job.address}</span>
+                    <span className="text-muted-foreground">Danh mục:</span>
+                    <span className="font-medium text-right">{getCategoryLabel(job.category)}</span>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ngày đăng:</span>
-                  <span className="font-medium">{formatDate(job.createdAt)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cập nhật:</span>
-                  <span className="font-medium">{formatDate(job.updatedAt)}</span>
-                  {/* Thống kê ứng tuyển */}
-                  {job.analytics?.applicationStats && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Thống kê đơn ứng tuyển</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                          <div className="p-2 rounded-lg bg-blue-50">
-                            <p className="text-2xl font-bold">{job.analytics.applicationStats.total || 0}</p>
-                            <p className="text-sm text-muted-foreground">Tổng cộng</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-yellow-50">
-                            <p className="text-2xl font-bold">{job.analytics.applicationStats.pending || 0}</p>
-                            <p className="text-sm text-muted-foreground">Chờ duyệt</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-purple-50">
-                            <p className="text-2xl font-bold">{job.analytics.applicationStats.scheduled_interview || 0}</p>
-                            <p className="text-sm text-muted-foreground">Đã hẹn</p>
-                          </div>
-                          <div className="p-2 rounded-lg bg-green-50">
-                            <p className="text-2xl font-bold">{job.analytics.applicationStats.accepted || 0}</p>
-                            <p className="text-sm text-muted-foreground">Chấp nhận</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Kinh nghiệm:</span>
+                    <span className="font-medium text-right">{getExperienceLevel(job.experience)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Hình thức:</span>
+                    <span className="font-medium text-right">{getWorkTypeBadge(job.workType)}</span>
+                  </div>
+                  {job.address && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Địa chỉ:</span>
+                      <span className="font-medium text-right truncate ml-2">{job.address}</span>
+                    </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ngày đăng:</span>
+                    <span className="font-medium text-right">{formatDate(job.createdAt)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cập nhật:</span>
+                    <span className="font-medium text-right">{formatDate(job.updatedAt)}</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Thông tin nhà tuyển dụng */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Thông tin nhà tuyển dụng</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Người liên hệ</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{job.recruiterProfileId?.fullname}</span>
+              {/* Thống kê ứng tuyển */}
+              {job.analytics?.applicationStats && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Thống kê đơn ứng tuyển</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="p-2 rounded-lg bg-blue-50">
+                        <p className="text-xl font-bold">{job.analytics.applicationStats.total || 0}</p>
+                        <p className="text-xs text-muted-foreground">Tổng cộng</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-yellow-50">
+                        <p className="text-xl font-bold">{job.analytics.applicationStats.pending || 0}</p>
+                        <p className="text-xs text-muted-foreground">Chờ duyệt</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-purple-50">
+                        <p className="text-xl font-bold">{job.analytics.applicationStats.scheduled_interview || 0}</p>
+                        <p className="text-xs text-muted-foreground">Đã hẹn</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-green-50">
+                        <p className="text-xl font-bold">{job.analytics.applicationStats.accepted || 0}</p>
+                        <p className="text-xs text-muted-foreground">Chấp nhận</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{job.recruiterProfileId?.userId?.email}</span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Thông tin nhà tuyển dụng */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Nhà tuyển dụng</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-2 text-muted-foreground">Người liên hệ</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{job.recruiterProfileId?.fullname}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{job.recruiterProfileId?.userId?.email}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Về công ty</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {job.recruiterProfileId?.company?.about}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <div>
+                    <h4 className="font-medium text-sm mb-2 text-muted-foreground">Giới thiệu công ty</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 hover:line-clamp-none transition-all">
+                      {job.recruiterProfileId?.company?.about}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end pt-4">
