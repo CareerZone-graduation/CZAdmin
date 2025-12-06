@@ -63,3 +63,8 @@ export const approveJob = async (jobId) => {
 export const rejectJob = async (jobId) => {
   return await apiClient.patch(`/admin/jobs/${jobId}/reject`, {}, { showToast: true })
 }
+
+// Get job statistics for admin
+export const getJobStatistics = async () => {
+  return await apiClient.get('/admin/jobs/stats')
+}

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
@@ -23,7 +23,10 @@ import {
   Eye,
   Check,
   X,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Clock,
+  AlertCircle,
+  Ban
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +43,15 @@ export function JobManagement() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [companySearchOpen, setCompanySearchOpen] = useState(false);
+  const [stats, setStats] = useState({
+    active: 0,
+    pending: 0,
+    expired: 0,
+    inactive: 0,
+    rejected: 0,
+    total: 0
+  });
+
   const [meta, setMeta] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -67,6 +79,22 @@ export function JobManagement() {
     };
     fetchCompanies();
   }, []);
+
+  // Fetch job stats
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await getJobStatistics();
+      if (response.data?.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch job stats:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   // Fetch jobs from API
   const fetchJobs = useCallback(async (page = meta.currentPage) => {
@@ -104,6 +132,7 @@ export function JobManagement() {
   useEffect(() => {
     setMeta((prev) => ({ ...prev, currentPage: 1 }));
     fetchJobs(1);
+    fetchStats(); // Update stats when filters change or just on mount/action? Actually update on action is better, but here it keeps it fresh.
   }, [searchTerm, statusFilter, companyFilter, sortFilter]);
 
   // Handle search button click
@@ -139,28 +168,15 @@ export function JobManagement() {
 
       // Refresh danh sách công việc từ server để cập nhật số liệu
       await fetchJobs();
+      await fetchStats();
     } catch (error) {
       toast.error(error.message || 'Không thể cập nhật trạng thái công việc');
     } finally {
       setLoading(false);
     }
-  }, [fetchJobs]);
+  }, [fetchJobs, fetchStats]);
 
-  const handleActivateJob = useCallback(async (jobId) => {
-    try {
-      setLoading(true);
-      await activateJob(jobId);
 
-      toast.success('Đã kích hoạt lại công việc');
-
-      // Refresh danh sách công việc từ server để cập nhật số liệu
-      await fetchJobs();
-    } catch (error) {
-      toast.error(error.message || 'Không thể kích hoạt lại công việc');
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchJobs]);
 
   const handleDeactivateJob = useCallback(async (jobId) => {
     try {
@@ -171,6 +187,7 @@ export function JobManagement() {
       setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, status: 'INACTIVE' } : job
       ));
+      fetchStats();
 
       toast.success('Đã vô hiệu hóa công việc');
     } catch (error) {
@@ -178,7 +195,7 @@ export function JobManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchStats]);
 
   const handleApproveJob = useCallback(async (jobId) => {
     try {
@@ -187,8 +204,9 @@ export function JobManagement() {
 
       // Update local state
       setJobs(prev => prev.map(job =>
-        job._id === jobId ? { ...job, approved: true } : job
+        job._id === jobId ? { ...job, approved: true, moderationStatus: 'APPROVED', status: 'ACTIVE' } : job
       ));
+      fetchStats();
 
       toast.success('Đã phê duyệt công việc');
     } catch (error) {
@@ -196,7 +214,7 @@ export function JobManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchStats]);
 
   const handleRejectJob = useCallback(async (jobId) => {
     try {
@@ -205,8 +223,10 @@ export function JobManagement() {
 
       // Update local state
       setJobs(prev => prev.map(job =>
-        job._id === jobId ? { ...job, approved: false, status: 'INACTIVE' } : job
+        job._id === jobId ? { ...job, approved: false, moderationStatus: 'REJECTED', status: 'INACTIVE' } : job
       ));
+
+      fetchStats();
 
       toast.success('Đã từ chối công việc');
     } catch (error) {
@@ -214,7 +234,7 @@ export function JobManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchStats]);
 
   const handleViewJob = (jobId) => {
     setSelectedJobId(jobId);
@@ -226,21 +246,25 @@ export function JobManagement() {
     setSelectedJobId(null);
   };
 
-  const getStatusBadge = (status, approved) => {
-    // If not approved, show pending badge regardless of status
-    if (approved === false) {
-      return <Badge className="bg-yellow-100 text-yellow-800">Chờ duyệt</Badge>;
+  const getStatusBadge = (job) => {
+    const { status, moderationStatus } = job;
+
+    if (moderationStatus === 'PENDING') {
+      return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Chờ duyệt</Badge>;
+    }
+    if (moderationStatus === 'REJECTED') {
+      return <Badge variant="destructive">Đã từ chối</Badge>;
     }
 
     switch (status) {
       case 'ACTIVE':
-        return <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Đang tuyển</Badge>;
       case 'INACTIVE':
-        return <Badge variant="secondary">Không hoạt động</Badge>;
+        return <Badge variant="secondary">Ngừng tuyển dụng</Badge>;
       case 'EXPIRED':
-        return <Badge className="bg-red-100 text-red-800">Hết hạn</Badge>;
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Hết hạn</Badge>;
       default:
-        return null;
+        return <Badge variant="outline">Không xác định</Badge>;
     }
   };
 
@@ -252,6 +276,40 @@ export function JobManagement() {
         <p className="text-gray-600">Giám sát và kiểm duyệt các tin tuyển dụng</p>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-blue-600 font-bold text-2xl">{stats.total}</span>
+            <span className="text-blue-800 text-sm font-medium mt-1">Tổng công việc</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-green-600 font-bold text-2xl">{stats.active}</span>
+            <span className="text-green-800 text-sm font-medium mt-1">Đang tuyển</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-yellow-600 font-bold text-2xl">{stats.pending}</span>
+            <span className="text-yellow-800 text-sm font-medium mt-1">Chờ duyệt</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-100 border-gray-200">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-600 font-bold text-2xl">{stats.inactive}</span>
+            <span className="text-gray-800 text-sm font-medium mt-1">Ngừng tuyển</span>
+          </CardContent>
+        </Card>
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-red-600 font-bold text-2xl">{stats.expired}</span>
+            <span className="text-red-800 text-sm font-medium mt-1">Hết hạn</span>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Danh sách Công việc</CardTitle>
@@ -260,11 +318,11 @@ export function JobManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div className="md:col-span-2 relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Tìm kiếm theo tiêu đề, kỹ năng..."
+                placeholder="Tìm kiếm theo tiêu đề..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
@@ -352,14 +410,15 @@ export function JobManagement() {
             </Popover>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Lọc theo trạng thái" />
+                <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="PENDING">Chờ duyệt</SelectItem>
-                <SelectItem value="ACTIVE">Hoạt động</SelectItem>
-                <SelectItem value="INACTIVE">Không hoạt động</SelectItem>
-                <SelectItem value="EXPIRED">Hết hạn</SelectItem>
+                <SelectItem value="ACTIVE">Đang tuyển</SelectItem>
+                <SelectItem value="INACTIVE">Ngừng tuyển dụng</SelectItem>
+                <SelectItem value="EXPIRED">Hết hạn ứng tuyển</SelectItem>
+                <SelectItem value="REJECTED">Đã từ chối</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortFilter} onValueChange={setSortFilter}>
@@ -401,7 +460,7 @@ export function JobManagement() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2">
                             <h3 className="text-lg font-semibold">{job.title}</h3>
-                            {getStatusBadge(job.status, job.approved)}
+                            {getStatusBadge(job)}
                           </div>
                           <div className="space-y-3 mb-4">
                             <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -425,17 +484,8 @@ export function JobManagement() {
                           <Eye className="w-4 h-4 mr-2" />
                           Xem
                         </Button>
-                        {job.approved === false && (
+                        {job.moderationStatus === 'PENDING' && (
                           <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveJob(job._id)}
-                              className="bg-green-600 hover:bg-green-700"
-                              disabled={loading}
-                            >
-                              <Check className="w-4 h-4 mr-2" />
-                              Phê duyệt
-                            </Button>
                             <Button
                               size="sm"
                               variant="destructive"
@@ -446,30 +496,30 @@ export function JobManagement() {
                               <X className="w-4 h-4 mr-2" />
                               Từ chối
                             </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveJob(job._id)}
+                              className="bg-green-600 hover:bg-green-700 whitespace-nowrap px-4 py-2"
+                              disabled={loading}
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Phê duyệt
+                            </Button>
                           </>
                         )}
-                        {job.approved === true && job.status === 'ACTIVE' && (
+                        {job.moderationStatus === 'REJECTED' && (
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleDeactivateJob(job._id)}
-                            disabled={loading}
-                            className="whitespace-nowrap px-4 py-2"
-                          >
-                            Vô hiệu hóa
-                          </Button>
-                        )}
-                        {job.approved === true && job.status === 'INACTIVE' && (
-                          <Button
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap px-4 py-2"
-                            onClick={() => handleActivateJob(job._id)}
+                            className="bg-green-600 hover:bg-green-700 whitespace-nowrap px-4 py-2"
+                            onClick={() => handleApproveJob(job._id)}
                             disabled={loading}
                           >
                             <Check className="w-4 h-4 mr-2" />
-                            Kích hoạt lại
+                            Duyệt lại
                           </Button>
                         )}
+
+
                       </div>
                     </div>
                   </CardContent>

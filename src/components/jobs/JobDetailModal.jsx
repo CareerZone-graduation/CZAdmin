@@ -18,13 +18,16 @@ import {
   XCircle,
   AlertTriangle
 } from 'lucide-react';
-import { getJobDetailForAdmin } from '@/services/jobService';
+import { toast } from 'sonner';
+import { getJobDetailForAdmin, approveJob, rejectJob } from '@/services/jobService';
 import { formatDate } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
+import { DialogFooter } from '@/components/ui/dialog';
 
 const JobDetailModal = ({ jobId, isOpen, onClose }) => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -46,22 +49,77 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      ACTIVE: { label: 'Đang hoạt động', variant: 'default', icon: CheckCircle },
-      INACTIVE: { label: 'Không hoạt động', variant: 'secondary', icon: XCircle },
-      EXPIRED: { label: 'Hết hạn', variant: 'destructive', icon: AlertTriangle }
-    };
+  const handleApprove = async () => {
+    try {
+      setActionLoading(true);
+      await approveJob(jobId);
+      toast.success('Đã phê duyệt công việc');
+      fetchJobDetail(); // Refresh data
+    } catch (error) {
+      toast.error(error.message || 'Không thể phê duyệt công việc');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
-    const config = statusMap[status] || { label: status, variant: 'outline', icon: AlertTriangle };
-    const Icon = config.icon;
+  const handleReject = async () => {
+    try {
+      setActionLoading(true);
+      await rejectJob(jobId);
+      toast.success('Đã từ chối công việc');
+      fetchJobDetail(); // Refresh data
+    } catch (error) {
+      toast.error(error.message || 'Không thể từ chối công việc');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
-    return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="w-3 h-3" />
-        {config.label}
-      </Badge>
-    );
+  const getStatusBadge = (job) => {
+    const { status, moderationStatus } = job;
+
+    if (moderationStatus === 'PENDING') {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" />
+          Chờ duyệt
+        </Badge>
+      );
+    }
+    if (moderationStatus === 'REJECTED') {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <XCircle className="w-3 h-3" />
+          Đã từ chối
+        </Badge>
+      );
+    }
+
+    switch (status) {
+      case 'ACTIVE':
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200 flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" />
+            Đang tuyển
+          </Badge>
+        );
+      case 'INACTIVE':
+        return (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <XCircle className="w-3 h-3" />
+            Ngừng tuyển dụng
+          </Badge>
+        );
+      case 'EXPIRED':
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200 flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            Hết hạn
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">Không xác định</Badge>;
+    }
   };
 
   const getJobTypeBadge = (type) => {
@@ -86,10 +144,10 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
   const getExperienceLevel = (experience) => {
     const experienceMap = {
       INTERN: 'Thực tập sinh',
-      JUNIOR_LEVEL: 'Fresher',
-      MID_LEVEL: 'Junior',
-      SENIOR_LEVEL: 'Senior',
-      EXPERT_LEVEL: 'Expert'
+      ENTRY_LEVEL: 'Mới đi làm',
+      MID_LEVEL: 'Nhân viên',
+      SENIOR_LEVEL: 'Quản lý',
+      EXECUTIVE: 'Giám đốc'
     };
     return experienceMap[experience] || experience;
   };
@@ -235,13 +293,43 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {getStatusBadge(job.status)}
-                  {job.approved && (
-                    <Badge variant="outline" className="text-green-600">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Đã phê duyệt
-                    </Badge>
+                  {/* Action Buttons */}
+                  {job.moderationStatus === 'PENDING' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleReject}
+                        disabled={actionLoading}
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Từ chối
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={handleApprove}
+                        disabled={actionLoading}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Phê duyệt
+                      </Button>
+                    </>
                   )}
+
+                  {job.moderationStatus === 'REJECTED' && (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={handleApprove}
+                      disabled={actionLoading}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Duyệt lại
+                    </Button>
+                  )}
+
+                  {getStatusBadge(job)}
                 </div>
               </div>
             </CardHeader>
@@ -408,9 +496,9 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button onClick={onClose}>Đóng</Button>
-        </div>
+        <DialogFooter className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>Đóng</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

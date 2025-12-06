@@ -78,26 +78,26 @@ export function EnhancedCompanyManagement() {
               name: item.company.name,
               description: item.company.about,
               logo: item.company.logo,
-              email: item.company.contactInfo.email,
-              phone: item.company.contactInfo.phone,
+              email: item.company.contactInfo?.email || item.recruiterInfo?.email || 'N/A',
+              phone: item.company.contactInfo?.phone || 'N/A',
               website: item.company.website,
               industry: item.company.industry,
               size: item.company.size,
-              founded: 'N/A', // Not in API response
-              revenue: 'N/A', // Not in API response
+              founded: 'N/A',
+              revenue: 'N/A',
               status: item.company.status,
               verified: item.company.verified,
               rejectionReason: item.company.rejectReason,
               location: {
-                street: item.company.address.street || 'N/A',
-                city: item.company.address.city || 'N/A',
-                state: item.company.address.state || 'N/A',
-                zipCode: item.company.address.zipCode || 'N/A',
-                country: item.company.address.country || 'N/A',
+                street: typeof item.company.address === 'string' ? item.company.address : (item.company.address?.street || 'N/A'),
+                city: item.company.location?.province || item.company.address?.city || 'N/A',
+                state: item.company.location?.district || item.company.address?.state || 'N/A',
+                zipCode: 'N/A',
+                country: 'Vietnam',
               },
               jobPostings: item.activeJobs || 0,
               totalApplications: item.totalApplications || 0,
-              documents: [ // Placeholder
+              documents: [
                 { type: 'business_registration', status: 'approved', url: item.company.businessRegistrationUrl },
                 { type: 'tax_id', status: 'approved', url: '#' }
               ],
@@ -336,7 +336,6 @@ export function EnhancedCompanyManagement() {
       {/* Companies List */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('companies.applications')}</CardTitle>
           <CardDescription>
             {t('companies.applicationsDescription')}
           </CardDescription>

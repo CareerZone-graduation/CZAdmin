@@ -157,16 +157,7 @@ export function CompanyDetail() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Thông tin công ty</CardTitle>
-            {company.company?.name && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/companies/${id}`, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Xem trang công ty
-              </Button>
-            )}
+            
           </div>
         </CardHeader>
         <CardContent>
