@@ -35,7 +35,7 @@ export const AdminSupportDashboard = () => {
     userType: ''
   });
 
-  const [sortField, setSortField] = useState('createdAt');
+  const [sortField, setSortField] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -88,7 +88,7 @@ export const AdminSupportDashboard = () => {
     queryFn: async () => {
       const result = await getAllSupportRequests(
         { isGuest: 'false' },
-        { sortBy: '-createdAt' },
+        { sortBy: '-updatedAt' },
         { page: 1, limit: 100 }
       );
       return result;
@@ -103,7 +103,7 @@ export const AdminSupportDashboard = () => {
     queryFn: async () => {
       const result = await getAllSupportRequests(
         { isGuest: 'true' },
-        { sortBy: '-createdAt' },
+        { sortBy: '-updatedAt' },
         { page: 1, limit: 100 }
       );
       return result;
@@ -248,193 +248,193 @@ export const AdminSupportDashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Quản lý yêu cầu hỗ trợ
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Xem và quản lý tất cả yêu cầu hỗ trợ từ người dùng
-        </p>
-      </div>
-
-      {/* Error Alert */}
-      {isError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error?.message || 'Có lỗi xảy ra khi tải dữ liệu'}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Overview Cards - Shows TOTAL stats from both tabs */}
-      {isLoadingStats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Quản lý yêu cầu hỗ trợ
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Xem và quản lý tất cả yêu cầu hỗ trợ từ người dùng
+          </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {overviewCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
+
+        {/* Error Alert */}
+        {isError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error?.message || 'Có lỗi xảy ra khi tải dữ liệu'}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Overview Cards - Shows TOTAL stats from both tabs */}
+        {isLoadingStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, index) => (
               <Card key={index}>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {card.title}
-                      </p>
-                      <p className="text-3xl font-bold mt-2">
-                        {card.count}
-                      </p>
-                    </div>
-                    <div className={`${card.bgColor} p-3 rounded-full`}>
-                      <Icon className={`h-6 w-6 ${card.color}`} />
-                    </div>
-                  </div>
+                  <Skeleton className="h-20 w-full" />
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Tabs for User Type */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
-          <TabsTrigger
-            value="authenticated"
-            className="flex items-center gap-2 data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
-          >
-            <UserCheck className="h-4 w-4" />
-            <span>Thành viên</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="guest"
-            className="flex items-center gap-2 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-700"
-          >
-            <UserX className="h-4 w-4" />
-            <span>Khách vãng lai</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab Content - Same layout for both tabs */}
-        <TabsContent value={activeTab} className="mt-0">
-          {/* Tab Description */}
-          <div className="mb-4 p-3 rounded-lg bg-muted/50 border">
-            <div className="flex items-center gap-2">
-              {activeTab === 'authenticated' ? (
-                <>
-                  <div className="p-2 rounded-full bg-green-100">
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Yêu cầu từ thành viên</p>
-                    <p className="text-xs text-muted-foreground">
-                      Các yêu cầu hỗ trợ từ người dùng đã đăng nhập (Ứng viên hoặc Nhà tuyển dụng)
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="p-2 rounded-full bg-gray-100">
-                    <UserX className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Yêu cầu từ khách</p>
-                    <p className="text-xs text-muted-foreground">
-                      Các yêu cầu hỗ trợ từ người dùng chưa đăng nhập (khách vãng lai)
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
+            ))}
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {overviewCards.map((card, index) => {
+              const Icon = card.icon;
+              return (
+                <Card key={index}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {card.title}
+                        </p>
+                        <p className="text-3xl font-bold mt-2">
+                          {card.count}
+                        </p>
+                      </div>
+                      <div className={`${card.bgColor} p-3 rounded-full`}>
+                        <Icon className={`h-6 w-6 ${card.color}`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filter Panel */}
-            <div className="lg:col-span-1">
-              <FilterPanel
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onReset={handleFilterReset}
-                hideGuestFilter={true}
-              />
+        {/* Tabs for User Type */}
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+            <TabsTrigger
+              value="authenticated"
+              className="flex items-center gap-2 data-[state=active]:bg-green-100 data-[state=active]:text-green-700"
+            >
+              <UserCheck className="h-4 w-4" />
+              <span>Thành viên</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="guest"
+              className="flex items-center gap-2 data-[state=active]:bg-gray-100 data-[state=active]:text-gray-700"
+            >
+              <UserX className="h-4 w-4" />
+              <span>Khách vãng lai</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab Content - Same layout for both tabs */}
+          <TabsContent value={activeTab} className="mt-0">
+            {/* Tab Description */}
+            <div className="mb-4 p-3 rounded-lg bg-muted/50 border">
+              <div className="flex items-center gap-2">
+                {activeTab === 'authenticated' ? (
+                  <>
+                    <div className="p-2 rounded-full bg-green-100">
+                      <UserCheck className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Yêu cầu từ thành viên</p>
+                      <p className="text-xs text-muted-foreground">
+                        Các yêu cầu hỗ trợ từ người dùng đã đăng nhập (Ứng viên hoặc Nhà tuyển dụng)
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-2 rounded-full bg-gray-100">
+                      <UserX className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Yêu cầu từ khách</p>
+                      <p className="text-xs text-muted-foreground">
+                        Các yêu cầu hỗ trợ từ người dùng chưa đăng nhập (khách vãng lai)
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Table Section */}
-            <div className="lg:col-span-3 space-y-4">
-              {/* Results Summary */}
-              {!isLoading && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Hiển thị{' '}
-                    {requests.length > 0
-                      ? (currentPage - 1) * pageSize + 1
-                      : 0}{' '}
-                    - {Math.min(currentPage * pageSize, pagination.total || 0)}{' '}
-                    trong tổng số {pagination.total || 0} yêu cầu
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => refetch()}
-                    disabled={isLoading}
-                  >
-                    Làm mới
-                  </Button>
-                </div>
-              )}
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Filter Panel */}
+              <div className="lg:col-span-1">
+                <FilterPanel
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onReset={handleFilterReset}
+                  hideGuestFilter={true}
+                />
+              </div>
 
-              {/* Support Request Table */}
-              <SupportRequestTable
-                requests={requests}
-                loading={isLoading}
-                onSort={handleSort}
-                sortField={sortField}
-                sortOrder={sortOrder}
-              />
-
-              {/* Pagination Controls */}
-              {!isLoading && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Trang {currentPage} / {pagination.totalPages}
-                  </p>
-                  <div className="flex items-center gap-2">
+              {/* Table Section */}
+              <div className="lg:col-span-3 space-y-4">
+                {/* Results Summary */}
+                {!isLoading && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Hiển thị{' '}
+                      {requests.length > 0
+                        ? (currentPage - 1) * pageSize + 1
+                        : 0}{' '}
+                      - {Math.min(currentPage * pageSize, pagination.total || 0)}{' '}
+                      trong tổng số {pagination.total || 0} yêu cầu
+                    </p>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1 || isLoading}
+                      onClick={() => refetch()}
+                      disabled={isLoading}
                     >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Trước
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNextPage}
-                      disabled={currentPage === pagination.totalPages || isLoading}
-                    >
-                      Sau
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                      Làm mới
                     </Button>
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Support Request Table */}
+                <SupportRequestTable
+                  requests={requests}
+                  loading={isLoading}
+                  onSort={handleSort}
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                />
+
+                {/* Pagination Controls */}
+                {!isLoading && pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Trang {currentPage} / {pagination.totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1 || isLoading}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Trước
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={currentPage === pagination.totalPages || isLoading}
+                      >
+                        Sau
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

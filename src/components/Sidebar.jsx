@@ -68,7 +68,7 @@ export function Sidebar({ className }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const [pendingSupportCount, setPendingSupportCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Fetch pending support requests count - only on initial mount
@@ -78,12 +78,12 @@ export function Sidebar({ className }) {
     const fetchPendingCount = async () => {
       try {
         const response = await getAllSupportRequests(
-          { status: 'pending' },
+          { hasUnreadCustomerResponse: 'true' },
           {},
           { page: 1, limit: 1 }
         );
         if (isMounted && response?.meta?.totalItems !== undefined) {
-          setPendingSupportCount(response.meta.totalItems);
+          setUnreadCount(response.meta.totalItems);
         }
       } catch (error) {
         console.error('Failed to fetch pending support requests count:', error);
@@ -114,7 +114,7 @@ export function Sidebar({ className }) {
 
   const getBadgeValue = (item) => {
     if (item.badgeKey === 'pendingSupport') {
-      return pendingSupportCount > 0 ? pendingSupportCount : null;
+      return unreadCount > 0 ? unreadCount : null;
     }
     return item.badge;
   };

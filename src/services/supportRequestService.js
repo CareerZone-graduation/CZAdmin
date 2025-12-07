@@ -9,7 +9,7 @@ import apiClient from './apiClient';
  */
 export const getAllSupportRequests = async (filters = {}, sort = {}, pagination = {}) => {
   const params = {};
-  
+
   // Filters
   if (filters.status) params.status = filters.status;
   if (filters.category) params.category = filters.category;
@@ -19,16 +19,17 @@ export const getAllSupportRequests = async (filters = {}, sort = {}, pagination 
   if (filters.fromDate) params.fromDate = filters.fromDate;
   if (filters.toDate) params.toDate = filters.toDate;
   if (filters.isGuest !== undefined && filters.isGuest !== '') params.isGuest = filters.isGuest;
-  
+  if (filters.hasUnreadCustomerResponse !== undefined) params.hasUnreadCustomerResponse = filters.hasUnreadCustomerResponse;
+
   // Sort
   if (sort.sortBy) params.sortBy = sort.sortBy;
-  
+
   // Pagination
   if (pagination.page) params.page = pagination.page;
   if (pagination.limit) params.limit = pagination.limit;
 
   console.log('📤 Sending request with params:', params);
-  
+
   const response = await apiClient.get('/admin/support-requests', { params });
   return response.data;
 };
@@ -53,10 +54,10 @@ export const getSupportRequestById = async (id) => {
  */
 export const respondToRequest = async (id, response, statusUpdate = null, priorityUpdate = null) => {
   const data = { response };
-  
+
   if (statusUpdate) data.statusUpdate = statusUpdate;
   if (priorityUpdate) data.priorityUpdate = priorityUpdate;
-  
+
   const apiResponse = await apiClient.post(`/admin/support-requests/${id}/respond`, data);
   return apiResponse.data;
 };
@@ -100,10 +101,10 @@ export const reopenRequest = async (id) => {
  */
 export const getAnalytics = async (dateRange = {}) => {
   const params = new URLSearchParams();
-  
+
   if (dateRange.fromDate) params.append('fromDate', dateRange.fromDate);
   if (dateRange.toDate) params.append('toDate', dateRange.toDate);
-  
+
   const response = await apiClient.get('/admin/support-requests/analytics', { params });
   return response.data;
 };

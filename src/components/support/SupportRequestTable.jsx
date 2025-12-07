@@ -10,26 +10,26 @@ import { formatDate } from '@/utils/formatDate';
 // Status Badge Component
 const getStatusBadge = (status) => {
   const statusConfig = {
-    'pending': { 
-      label: 'Đang chờ', 
-      className: 'bg-yellow-500 hover:bg-yellow-600 text-white border-0' 
+    'pending': {
+      label: 'Đang chờ',
+      className: 'bg-yellow-500 hover:bg-yellow-600 text-white border-0'
     },
-    'in-progress': { 
-      label: 'Đang xử lý', 
-      className: 'bg-blue-500 hover:bg-blue-600 text-white border-0' 
+    'in-progress': {
+      label: 'Đang xử lý',
+      className: 'bg-blue-500 hover:bg-blue-600 text-white border-0'
     },
-    'resolved': { 
-      label: 'Đã giải quyết', 
-      className: 'bg-green-500 hover:bg-green-600 text-white border-0' 
+    'resolved': {
+      label: 'Đã giải quyết',
+      className: 'bg-green-500 hover:bg-green-600 text-white border-0'
     },
-    'closed': { 
-      label: 'Đã đóng', 
-      className: 'bg-gray-500 hover:bg-gray-600 text-white border-0' 
+    'closed': {
+      label: 'Đã đóng',
+      className: 'bg-gray-500 hover:bg-gray-600 text-white border-0'
     }
   };
 
   const config = statusConfig[status] || statusConfig.pending;
-  
+
   return (
     <Badge variant="outline" className={config.className}>
       {config.label}
@@ -90,22 +90,22 @@ const getUserTypeBadge = (userType, isGuest = false) => {
   }
 
   const typeConfig = {
-    'candidate': { 
-      label: 'Ứng viên', 
+    'candidate': {
+      label: 'Ứng viên',
       icon: '👤',
       dotColor: 'bg-purple-500',
-      className: 'bg-purple-50 text-purple-700 border-purple-200' 
+      className: 'bg-purple-50 text-purple-700 border-purple-200'
     },
-    'recruiter': { 
-      label: 'Nhà tuyển dụng', 
+    'recruiter': {
+      label: 'Nhà tuyển dụng',
       icon: '🏢',
       dotColor: 'bg-blue-500',
-      className: 'bg-blue-50 text-blue-700 border-blue-200' 
+      className: 'bg-blue-50 text-blue-700 border-blue-200'
     }
   };
 
   const config = typeConfig[userType] || typeConfig.candidate;
-  
+
   return (
     <div className="flex items-center gap-1.5">
       <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${config.className}`}>
@@ -164,6 +164,7 @@ const TableLoadingSkeleton = () => (
         <TableCell><Skeleton className="h-4 w-20" /></TableCell>
         <TableCell><Skeleton className="h-4 w-20" /></TableCell>
         <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
         <TableCell><Skeleton className="h-16 w-20" /></TableCell>
       </TableRow>
     ))}
@@ -171,8 +172,8 @@ const TableLoadingSkeleton = () => (
 );
 
 // Main SupportRequestTable Component
-export const SupportRequestTable = ({ 
-  requests = [], 
+export const SupportRequestTable = ({
+  requests = [],
   loading = false,
   onSort,
   sortField,
@@ -215,17 +216,23 @@ export const SupportRequestTable = ({
               <TableHead>Tiêu đề</TableHead>
               <TableHead>Danh mục</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleSort('priority')}
               >
                 Độ ưu tiên {renderSortIcon('priority')}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleSort('createdAt')}
               >
                 Ngày tạo {renderSortIcon('createdAt')}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleSort('updatedAt')}
+              >
+                Cập nhật {renderSortIcon('updatedAt')}
               </TableHead>
               <TableHead className="w-[120px]">Hành động</TableHead>
             </TableRow>
@@ -247,17 +254,23 @@ export const SupportRequestTable = ({
               <TableHead>Tiêu đề</TableHead>
               <TableHead>Danh mục</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleSort('priority')}
               >
                 Độ ưu tiên {renderSortIcon('priority')}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleSort('createdAt')}
               >
                 Ngày tạo {renderSortIcon('createdAt')}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleSort('updatedAt')}
+              >
+                Cập nhật {renderSortIcon('updatedAt')}
               </TableHead>
               <TableHead className="w-[120px]">Hành động</TableHead>
             </TableRow>
@@ -287,24 +300,30 @@ export const SupportRequestTable = ({
             <TableHead>Tiêu đề</TableHead>
             <TableHead>Danh mục</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => handleSort('priority')}
             >
               Độ ưu tiên {renderSortIcon('priority')}
             </TableHead>
-            <TableHead 
+            <TableHead
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => handleSort('createdAt')}
             >
               Ngày tạo {renderSortIcon('createdAt')}
+            </TableHead>
+            <TableHead
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => handleSort('updatedAt')}
+            >
+              Cập nhật {renderSortIcon('updatedAt')}
             </TableHead>
             <TableHead className="w-[120px]">Hành động</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {requests.map((request) => (
-            <TableRow 
+            <TableRow
               key={request._id}
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => handleRowClick(request._id)}
@@ -315,13 +334,12 @@ export const SupportRequestTable = ({
               <TableCell>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      request.requester?.isGuest 
-                        ? 'bg-gray-100 text-gray-600' 
-                        : request.requester?.userType === 'recruiter'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
-                    }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${request.requester?.isGuest
+                      ? 'bg-gray-100 text-gray-600'
+                      : request.requester?.userType === 'recruiter'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-purple-100 text-purple-700'
+                      }`}>
                       {request.requester?.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div className="flex flex-col">
@@ -340,9 +358,22 @@ export const SupportRequestTable = ({
                 </div>
               </TableCell>
               <TableCell>
-                <p className="font-medium line-clamp-2 max-w-md">
-                  {request.subject}
-                </p>
+                <div className="flex flex-col gap-1.5">
+                  {request.status === 'pending' ? (
+                    <div className="flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                      <span className="text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wide">Mới - Đang Chờ</span>
+                    </div>
+                  ) : request.hasUnreadCustomerResponse ? (
+                    <div className="flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wide">Tin Nhắn Mới</span>
+                    </div>
+                  ) : null}
+                  <p className={`font-medium line-clamp-2 max-w-md ${request.hasUnreadCustomerResponse || request.status === 'pending' ? 'font-semibold text-foreground' : ''}`}>
+                    {request.subject}
+                  </p>
+                </div>
               </TableCell>
               <TableCell>
                 <span className="text-sm text-muted-foreground">
@@ -358,10 +389,13 @@ export const SupportRequestTable = ({
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(request.createdAt)}
               </TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {formatDate(request.updatedAt)}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -370,8 +404,8 @@ export const SupportRequestTable = ({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={(e) => handleQuickRespond(e, request._id)}
                   >
