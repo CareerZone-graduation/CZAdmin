@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SearchableSelect from '@/components/ui/searchable-select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination } from '@/components/common/Pagination';
 import { t } from '@/constants/translations';
@@ -307,17 +308,16 @@ export function EnhancedCompanyManagement() {
                 <SelectItem value="rejected">{t('companies.statusRejected')}</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={industryFilter} onValueChange={setIndustryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('companies.filterByIndustry')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('companies.allIndustries')}</SelectItem>
-                {industryEnum.options.map(industry => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[
+                { value: 'all', label: t('companies.allIndustries') },
+                ...industryEnum.options.map(industry => ({ value: industry, label: industry }))
+              ]}
+              value={industryFilter}
+              onChange={setIndustryFilter}
+              placeholder={t('companies.filterByIndustry')}
+              searchPlaceholder="Tìm lĩnh vực..."
+            />
             <Select value={sortOption} onValueChange={setSortOption}>
               <SelectTrigger>
                 <SelectValue placeholder={t('users.sortBy')} />
