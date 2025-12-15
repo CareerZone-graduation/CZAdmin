@@ -327,6 +327,10 @@ export function EnhancedCompanyManagement() {
                 <SelectItem value="createdAt_asc">{t('companies.oldest')}</SelectItem>
                 <SelectItem value="name_asc">{t('companies.nameAZ')}</SelectItem>
                 <SelectItem value="name_desc">{t('companies.nameZA')}</SelectItem>
+                <SelectItem value="jobs_desc">{t('companies.mostJobs')}</SelectItem>
+                <SelectItem value="jobs_asc">{t('companies.leastJobs')}</SelectItem>
+                <SelectItem value="applications_desc">{t('companies.mostApplications')}</SelectItem>
+                <SelectItem value="applications_asc">{t('companies.leastApplications')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

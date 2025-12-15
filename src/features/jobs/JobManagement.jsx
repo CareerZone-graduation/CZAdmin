@@ -450,12 +450,16 @@ export function JobManagement() {
                   <CardContent className="p-8">
                     <div className="flex items-start justify-between gap-10">
                       <div className="flex items-start gap-6 flex-1">
-                        <div className="flex-shrink-0">
-                          <img
-                            src={job.recruiterProfileId?.company?.logo || '/placeholder-logo.png'}
-                            alt={job.recruiterProfileId?.company?.name || 'Company Logo'}
-                            className="w-35 h-20 rounded-lg object-contain border-2 border-gray-300 p-3 bg-white"
-                          />
+                        <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {job.recruiterProfileId?.company?.logo ? (
+                            <img
+                              src={job.recruiterProfileId.company.logo}
+                              alt={job.recruiterProfileId?.company?.name || 'Company Logo'}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <Building2 className="w-8 h-8 text-blue-600" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2">
