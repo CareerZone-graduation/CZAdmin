@@ -1,230 +1,191 @@
-# CareerZone Admin Dashboard
+# CareerZone - Bảng Điều Khiển Quản Trị
 
-A modern, responsive admin dashboard for CareerZone built with React, Redux Toolkit, TailwindCSS, and shadcn/ui.
+Ứng dụng quản trị cho nền tảng CareerZone, được xây dựng với React, Redux Toolkit, TailwindCSS và shadcn/ui.
 
-## 🚀 Features
+## 📋 Tổng Quan
 
-- **Modern Tech Stack**: React 19, Redux Toolkit, TailwindCSS, shadcn/ui
-- **Responsive Design**: Mobile-first responsive design with modern UI components
-- **Dashboard Overview**: Comprehensive stats and analytics
-- **Company Management**: Approve/reject company registrations
-- **User Management**: Activate/suspend users, filter by role and status
-- **Job Management**: Approve/reject job postings, manage featured listings
-- **Transaction Management**: View payment history and transaction details
-- **Authentication**: Secure login with demo credentials
+CareerZone Admin là bảng điều khiển dành cho quản trị viên hệ thống. Ứng dụng cung cấp công cụ quản lý toàn diện cho người dùng, công ty, tin tuyển dụng và giao dịch trên nền tảng.
 
-## 🛠️ Tech Stack
+## 🚀 Tính Năng
 
-- **Frontend**: React 19, Vite
-- **State Management**: Redux Toolkit
-- **Styling**: TailwindCSS, shadcn/ui
-- **Icons**: Lucide React
-- **Notifications**: Sonner
-- **Routing**: React Router DOM
+### Dashboard Tổng Quan
+- Thống kê tổng quan hệ thống (users, jobs, companies, revenue)
+- Biểu đồ phân tích theo thời gian
+- Hoạt động gần đây
 
-## 📁 Project Structure
+### Quản Lý Người Dùng
+- Danh sách tất cả người dùng (Candidate, Recruiter)
+- Lọc theo vai trò, trạng thái, ngày đăng ký
+- Kích hoạt/Vô hiệu hóa tài khoản
+- Xem chi tiết thông tin người dùng
+
+### Quản Lý Công Ty
+- Danh sách công ty đăng ký
+- Duyệt/Từ chối đăng ký công ty mới
+- Xác minh thông tin công ty
+- Quản lý trạng thái công ty (chờ duyệt, đã duyệt, bị khóa)
+
+### Quản Lý Tin Tuyển Dụng
+- Danh sách tất cả tin tuyển dụng
+- Duyệt/Từ chối tin đăng mới
+- Quản lý tin nổi bật (featured)
+- Thống kê theo ngành nghề, khu vực
+
+### Quản Lý Giao Dịch
+- Lịch sử thanh toán
+- Chi tiết giao dịch
+- Báo cáo doanh thu
+- Xuất báo cáo
+
+
+## 🛠️ Công Nghệ Sử Dụng
+
+| Thành phần | Công nghệ |
+|------------|-----------|
+| Framework | React v19 |
+| Build Tool | Vite + SWC |
+| State Management | Redux Toolkit |
+| Styling | Tailwind CSS |
+| UI Components | shadcn/ui, Radix UI |
+| Charts | Recharts |
+| Routing | React Router DOM |
+| HTTP Client | Axios |
+| Icons | Lucide React |
+| Notifications | Sonner |
+
+## 📁 Cấu Trúc Dự Án
 
 ```
-src/
-├── components/           # Reusable UI components
-│   ├── common/          # Common components (skeletons, etc.)
-│   └── ui/              # shadcn/ui components
-├── features/            # Business logic organized by feature
-│   ├── auth/           # Authentication feature
-│   ├── companies/      # Company management feature
-│   ├── dashboard/      # Dashboard feature
-│   ├── jobs/           # Job management feature
-│   ├── transactions/   # Transaction management feature
-│   └── users/          # User management feature
-├── layouts/            # Layout components
-│   ├── DashboardLayout.jsx
-│   └── AuthLayout.jsx
-├── pages/              # Page entry points
-│   ├── DashboardPage.jsx
-│   ├── LoginPage.jsx
-│   ├── CompanyManagementPage.jsx
-│   ├── UserManagementPage.jsx
-│   ├── JobManagementPage.jsx
-│   └── TransactionManagementPage.jsx
-├── routes/             # Routing logic
-│   ├── AppRouter.jsx
-│   ├── AuthRoute.jsx
-│   └── ProtectedRoute.jsx
-├── store/              # Redux store configuration
-│   └── index.js
-├── data/               # Mock data and constants
-│   ├── companies.js
-│   ├── users.js
-│   ├── jobs.js
-│   └── transactions.js
-├── lib/                # Utility libraries
-│   └── utils.js
-├── utils/              # Helper utilities
-│   ├── auth.js
-│   ├── cn.js
-│   ├── formatDate.js
-│   └── token.js
-└── services/           # API services
-    ├── apiClient.js
-    ├── authService.js
-    ├── companyService.js
-    ├── jobService.js
-    └── userService.js
+fe-admin/
+├── src/
+│   ├── components/       # React components
+│   │   ├── analytics/    # Biểu đồ và thống kê
+│   │   ├── common/       # Components dùng chung (skeletons)
+│   │   ├── jobs/         # Quản lý việc làm
+│   │   ├── transactions/ # Quản lý giao dịch
+│   │   └── ui/           # shadcn/ui components
+│   ├── data/             # Mock data và constants
+│   ├── features/         # Logic theo feature
+│   │   ├── auth/         # Xác thực
+│   │   ├── companies/    # Quản lý công ty
+│   │   ├── dashboard/    # Dashboard
+│   │   ├── jobs/         # Quản lý việc làm
+│   │   ├── transactions/ # Quản lý giao dịch
+│   │   └── users/        # Quản lý người dùng
+│   ├── layouts/          # Layout components
+│   │   ├── DashboardLayout.jsx
+│   │   └── AuthLayout.jsx
+│   ├── lib/              # Thư viện tiện ích
+│   ├── pages/            # Entry points cho pages
+│   ├── routes/           # Cấu hình routing
+│   ├── services/         # API clients
+│   ├── store/            # Redux store
+│   └── utils/            # Helper utilities
+├── .env.example
+├── package.json
+└── vite.config.js
 ```
 
-## 🚦 Getting Started
+## 🚦 Hướng Dẫn Cài Đặt
 
-### Prerequisites
+### Yêu Cầu Hệ Thống
 
-- Node.js 18+ 
-- npm or yarn
+- **Node.js**: v18 trở lên
+- **pnpm**: Package manager (khuyến nghị)
 
-### Installation
+### Các Bước Cài Đặt
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd CareerZone-FE-ADMIN
-```
+1. **Di chuyển vào thư mục**:
+   ```bash
+   cd fe-admin
+   ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. **Cài đặt dependencies**:
+   ```bash
+   pnpm install
+   ```
 
-3. Start the development server:
-```bash
-npm run dev
-```
+3. **Cấu hình môi trường**:
+   ```bash
+   copy .env.example .env
+   ```
 
-4. Open your browser and navigate to `http://localhost:3000`
+4. **Chạy development server**:
+   ```bash
+   pnpm run dev
+   ```
+   
+   Ứng dụng sẽ mở tại `http://localhost:3200`
 
-### Demo Credentials
+### Tài Khoản Demo
 
-Use these credentials to log in to the admin dashboard:
+Sử dụng thông tin sau để đăng nhập:
 
 - **Email**: `admin@careerzone.com`
-- **Password**: `admin123`
+- **Mật khẩu**: `admin123`
 
-## 📖 Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+## 📦 Scripts Có Sẵn
+
+| Script | Mô tả |
+|--------|-------|
+| `pnpm run dev` | Chạy development server |
+| `pnpm run build` | Build cho production |
+| `pnpm run preview` | Preview bản build |
+| `pnpm run lint` | Kiểm tra linting |
 
 ## 🎨 UI Components
 
-This project uses shadcn/ui components for a consistent, modern design:
+Dự án sử dụng shadcn/ui components:
 
-- **Cards** - Information display containers
-- **Tables** - Data presentation with sorting and filtering
-- **Buttons** - Various button styles and states
-- **Forms** - Input fields, selects, labels
-- **Dialogs** - Modal dialogs and overlays
-- **Badges** - Status indicators and tags
-- **Alerts** - Success, error, and warning messages
+- **Cards**: Container hiển thị thông tin
+- **Tables**: Bảng dữ liệu với sorting và filtering
+- **Buttons**: Các loại button
+- **Forms**: Input fields, selects, labels
+- **Dialogs**: Modal và overlays
+- **Badges**: Status indicators
+- **Alerts**: Thông báo success, error, warning
+- **Charts**: Biểu đồ với Recharts
 
 ## 🔧 State Management
 
-The application uses Redux Toolkit for state management with the following slices:
+Ứng dụng sử dụng Redux Toolkit với các slices:
 
-- **authSlice** - Authentication state
-- **companiesSlice** - Company management state
-- **usersSlice** - User management state  
-- **jobsSlice** - Job management state
-- **transactionsSlice** - Transaction management state
+- **authSlice**: Trạng thái xác thực
+- **companiesSlice**: Quản lý công ty
+- **usersSlice**: Quản lý người dùng
+- **jobsSlice**: Quản lý việc làm
+- **transactionsSlice**: Quản lý giao dịch
 
-## 🎯 Key Features Breakdown
+## 🔐 Xác Thực
 
-### Dashboard
-- Overview stats (companies, users, jobs, revenue)
-- Recent activity feed
-- Quick action buttons
-
-### Company Management
-- View all company registrations
-- Approve/reject company applications
-- Search and filter companies
-- View company details
-
-### User Management
-- View all users (job seekers and recruiters)
-- Activate/suspend user accounts
-- Filter by role and status
-- Search users
-
-### Job Management
-- View all job postings
-- Approve/reject job applications
-- Toggle featured status
-- Filter by status and type
-
-### Transaction Management
-- View payment history
-- Filter by status and type
-- Transaction details modal
-- Revenue analytics
-
-## 🔐 Authentication
-
-The app includes a complete authentication system:
-
-- Protected routes requiring login
-- Login form with validation
-- Demo credentials for testing
-- Logout functionality
-- Auth state persistence
-
-## 📱 Responsive Design
-
-The dashboard is fully responsive and works on:
-
-- Desktop (1024px+)
-- Tablet (768px - 1023px) 
-- Mobile (320px - 767px)
+Hệ thống xác thực bao gồm:
+- Protected routes yêu cầu đăng nhập
+- Form đăng nhập với validation
+- Tài khoản demo để test
+- Chức năng đăng xuất
+- Lưu trạng thái auth
 
 ## 🚀 Deployment
 
-### Build for Production
+### Build cho Production
 
 ```bash
-npm run build
+pnpm run build
 ```
 
-The build files will be generated in the `dist` directory.
+Files build sẽ được tạo trong thư mục `dist`.
 
-### Deploy to Vercel/Netlify
+## 🤝 Đóng Góp
 
-The app is configured for easy deployment to modern hosting platforms:
+### Quy Trình Đóng Góp
 
-1. Build the project
-2. Deploy the `dist` folder
-3. Configure environment variables if needed
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+1. Fork repository
+2. Tạo branch mới: `git checkout -b feature/ten-tinh-nang`
+3. Commit changes: `git commit -m "feat: mô tả tính năng"`
+4. Push branch: `git push origin feature/ten-tinh-nang`
+5. Tạo Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-## 📞 Support
-
-For support and questions, please contact the development team or create an issue in the repository.+ Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Dự án này được phát triển cho CareerZone Platform.
