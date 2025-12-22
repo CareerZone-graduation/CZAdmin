@@ -18,12 +18,11 @@ const getStatusBadge = (status) => {
   const statusConfig = {
     'SUCCESS': { variant: 'default', label: 'Thành công', className: 'bg-green-500 hover:bg-green-600' },
     'PENDING': { variant: 'secondary', label: 'Đang xử lý', className: 'bg-yellow-500 hover:bg-yellow-600' },
-    'FAILED': { variant: 'destructive', label: 'Thất bại', className: 'bg-red-500 hover:bg-red-600' },
-    'CANCELLED': { variant: 'outline', label: 'Đã hủy', className: 'bg-gray-500 hover:bg-gray-600' }
+    'FAILED': { variant: 'destructive', label: 'Thất bại', className: 'bg-red-500 hover:bg-red-600' }
   };
 
   const config = statusConfig[status] || statusConfig.PENDING;
-  
+
   return (
     <Badge variant={config.variant} className={config.className}>
       {config.label}
@@ -40,7 +39,7 @@ const getPaymentMethodBadge = (method) => {
   };
 
   const config = methodConfig[method] || { color: 'bg-gray-500', label: method };
-  
+
   return (
     <Badge variant="outline" className={`${config.color} text-white border-0`}>
       {config.label}
@@ -118,13 +117,19 @@ const TableLoadingSkeleton = () => (
   <TableBody>
     {[...Array(10)].map((_, index) => (
       <TableRow key={index}>
-        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-        <TableCell><Skeleton className="h-8 w-8 rounded" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+        <TableCell>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </TableCell>
+        <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-1/3" /></TableCell>
+        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+        <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
+        <TableCell className="text-right"><Skeleton className="h-8 w-8 rounded ml-auto" /></TableCell>
       </TableRow>
     ))}
   </TableBody>
@@ -132,12 +137,12 @@ const TableLoadingSkeleton = () => (
 
 
 // Main TransactionTable Component
-export const TransactionTable = ({ 
-  transactions = [], 
-  loading = false, 
-  pagination = {}, 
+export const TransactionTable = ({
+  transactions = [],
+  loading = false,
+  pagination = {},
   onPageChange,
-  error = null 
+  error = null
 }) => {
   const { currentPage = 1, totalPages = 1, totalItems = 0, limit = 10 } = pagination;
 
@@ -177,17 +182,17 @@ export const TransactionTable = ({
         <div className="space-y-4">
           {/* Table */}
           <div className="rounded-md border">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mã giao dịch</TableHead>
-                  <TableHead>Người dùng</TableHead>
-                  <TableHead>Số tiền</TableHead>
-                  <TableHead>Số xu</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Phương thức</TableHead>
-                  <TableHead>Thời gian</TableHead>
-                  <TableHead className="w-[50px]">Hành động</TableHead>
+                  <TableHead className="w-[180px]">Mã giao dịch</TableHead>
+                  <TableHead className="w-[250px]">Người dùng</TableHead>
+                  <TableHead className="w-[140px]">Số tiền</TableHead>
+                  <TableHead className="w-[100px]">Số xu</TableHead>
+                  <TableHead className="w-[130px]">Trạng thái</TableHead>
+                  <TableHead className="w-[120px]">Phương thức</TableHead>
+                  <TableHead className="w-[180px]">Thời gian</TableHead>
+                  <TableHead className="w-[80px] text-right">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
               {loading ? (
@@ -207,13 +212,13 @@ export const TransactionTable = ({
                 <TableBody>
                   {transactions.map((transaction) => (
                     <TableRow key={transaction._id}>
-                      <TableCell className="font-mono text-sm">
+                      <TableCell className="font-mono text-sm truncate" title={transaction.transactionCode}>
                         {transaction.transactionCode}
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium">{transaction.user?.fullname || 'N/A'}</p>
-                          <p className="text-sm text-muted-foreground">{transaction.user?.email}</p>
+                        <div className="space-y-1 overflow-hidden">
+                          <p className="font-medium truncate">{transaction.user?.fullname || 'N/A'}</p>
+                          <p className="text-sm text-muted-foreground truncate">{transaction.user?.email}</p>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
@@ -236,7 +241,7 @@ export const TransactionTable = ({
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(transaction.createdAt)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="ghost" size="sm">

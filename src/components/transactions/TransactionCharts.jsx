@@ -24,8 +24,8 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="text-sm font-medium text-gray-900">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {entry.dataKey === 'revenue' 
-              ? `${entry.value.toLocaleString()} VNĐ` 
+            {entry.name}: {entry.dataKey === 'revenue'
+              ? `${entry.value.toLocaleString()} VNĐ`
               : entry.value.toLocaleString()}
           </p>
         ))}
@@ -112,7 +112,7 @@ export const RevenueOverTimeChart = () => {
       </Card>
     );
   }
-  
+
 
   if (error) {
     return (
@@ -138,51 +138,51 @@ export const RevenueOverTimeChart = () => {
             <CardTitle>Xu hướng doanh thu</CardTitle>
             <CardDescription>Doanh thu theo thời gian</CardDescription>
           </div>
-         <div className="flex gap-2 items-center">
-           {/* Chọn ngày bắt đầu */}
-           <Popover>
-             <PopoverTrigger asChild>
-               <Button variant="outline" className="text-sm flex items-center gap-2">
-                 <CalendarIcon className="w-4 h-4" />
-                 {filters.startDate ? format(filters.startDate, "dd/MM/yyyy") : "Ngày bắt đầu"}
-               </Button>
-             </PopoverTrigger>
-             <PopoverContent className="p-0" align="start">
-               <Calendar
-                 mode="single"
-                 selected={filters.startDate}
-                 onSelect={(date) => {
-                   if (date) {
-                     setFilters(f => ({ ...f, startDate: date }));
-                   }
-                 }}
-                 initialFocus
-               />
-             </PopoverContent>
-           </Popover>
+          <div className="flex gap-2 items-center">
+            {/* Chọn ngày bắt đầu */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="text-sm flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {filters.startDate ? format(filters.startDate, "dd/MM/yyyy") : "Ngày bắt đầu"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filters.startDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setFilters(f => ({ ...f, startDate: date }));
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
 
-           {/* Chọn ngày kết thúc */}
-           <Popover>
-             <PopoverTrigger asChild>
-               <Button variant="outline" className="text-sm flex items-center gap-2">
-                 <CalendarIcon className="w-4 h-4" />
-                 {filters.endDate ? format(filters.endDate, "dd/MM/yyyy") : "Ngày kết thúc"}
-               </Button>
-             </PopoverTrigger>
-             <PopoverContent className="p-0" align="start">
-               <Calendar
-                 mode="single"
-                 selected={filters.endDate}
-                 onSelect={(date) => {
-                   if (date) {
-                     setFilters(f => ({ ...f, endDate: date }));
-                   }
-                 }}
-                 initialFocus
-               />
-             </PopoverContent>
-           </Popover>
-         </div>
+            {/* Chọn ngày kết thúc */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="text-sm flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {filters.endDate ? format(filters.endDate, "dd/MM/yyyy") : "Ngày kết thúc"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filters.endDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setFilters(f => ({ ...f, endDate: date }));
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -190,28 +190,28 @@ export const RevenueOverTimeChart = () => {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0}/>
+                <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-            <XAxis 
-              dataKey="date" 
+            <XAxis
+              dataKey="date"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
             />
-            <YAxis 
+            <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area 
-              type="monotone" 
-              dataKey="revenue" 
-              stroke="hsl(217, 91%, 60%)" 
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="hsl(217, 91%, 60%)"
               strokeWidth={2}
-              fillOpacity={1} 
+              fillOpacity={1}
               fill="url(#colorRevenue)"
               name="Doanh thu"
             />
@@ -271,7 +271,7 @@ export const RevenueByRoleChart = ({ data }) => {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Doanh thu']}
             />
             <Legend />
@@ -310,22 +310,22 @@ export const RevenueByPaymentMethodChart = ({ data }) => {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
             />
-            <YAxis 
+            <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Doanh thu']}
             />
-            <Bar 
-              dataKey="value" 
-              fill="hsl(217, 91%, 60%)" 
+            <Bar
+              dataKey="value"
+              fill="hsl(217, 91%, 60%)"
               radius={[4, 4, 0, 0]}
               name="Doanh thu"
             />
@@ -357,8 +357,7 @@ export const TransactionStatusChart = ({ data }) => {
   const COLORS = {
     'Thành công': 'hsl(142, 76%, 36%)', // Green
     'Thất bại': 'hsl(0, 84%, 60%)',     // Red  
-    'Đang xử lý': 'hsl(48, 96%, 53%)',  // Yellow
-    'Đã hủy': 'hsl(224, 71%, 62%)'      // Blue
+    'Đang xử lý': 'hsl(48, 96%, 53%)'   // Yellow
   };
 
   return (
@@ -384,7 +383,7 @@ export const TransactionStatusChart = ({ data }) => {
                 <Cell key={`cell-${index}`} fill={COLORS[entry.name] || 'hsl(var(--muted))'} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [value, 'Số giao dịch']}
             />
             <Legend />
@@ -423,31 +422,31 @@ export const TopSpendingUsersChart = ({ data, limit = 5 }) => {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart 
-            data={topUsers} 
+          <BarChart
+            data={topUsers}
             layout="horizontal"
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-            <XAxis 
+            <XAxis
               type="number"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
             />
-            <YAxis 
+            <YAxis
               type="category"
-              dataKey="email" 
+              dataKey="email"
               stroke="hsl(var(--muted-foreground))"
               fontSize={10}
               width={90}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value.toLocaleString()} VNĐ`, 'Tổng chi tiêu']}
             />
-            <Bar 
-              dataKey="totalSpent" 
-              fill="hsl(262, 83%, 58%)" 
+            <Bar
+              dataKey="totalSpent"
+              fill="hsl(262, 83%, 58%)"
               radius={[0, 4, 4, 0]}
               name="Tổng chi tiêu"
             />

@@ -19,8 +19,7 @@ const TRANSACTION_STATUSES = [
   { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'SUCCESS', label: 'Thành công' },
   { value: 'PENDING', label: 'Đang xử lý' },
-  { value: 'FAILED', label: 'Thất bại' },
-  { value: 'CANCELLED', label: 'Đã hủy' }
+  { value: 'FAILED', label: 'Thất bại' }
 ];
 
 const SORT_OPTIONS = [
@@ -31,9 +30,9 @@ const SORT_OPTIONS = [
   { value: 'amountPaid', label: 'Số tiền thấp nhất' }
 ];
 
-export const TransactionFilters = ({ 
-  filters, 
-  onFiltersChange, 
+export const TransactionFilters = ({
+  filters,
+  onFiltersChange,
   onSearch,
   onClearFilters,
   loading = false,
@@ -88,8 +87,8 @@ export const TransactionFilters = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setShowAdvanced(!showAdvanced)}
             >
@@ -130,8 +129,8 @@ export const TransactionFilters = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="status-filter">Trạng thái</Label>
-            <Select 
-              value={localFilters.status || 'all'} 
+            <Select
+              value={localFilters.status || 'all'}
               onValueChange={(value) => handleFilterChange('status', value === 'all' ? '' : value)}
             >
               <SelectTrigger id="status-filter">
@@ -149,8 +148,8 @@ export const TransactionFilters = ({
 
           <div className="space-y-2">
             <Label htmlFor="payment-filter">Phương thức thanh toán</Label>
-            <Select 
-              value={localFilters.paymentMethod || 'all'} 
+            <Select
+              value={localFilters.paymentMethod || 'all'}
               onValueChange={(value) => handleFilterChange('paymentMethod', value === 'all' ? '' : value)}
             >
               <SelectTrigger id="payment-filter">
@@ -168,8 +167,8 @@ export const TransactionFilters = ({
 
           <div className="space-y-2">
             <Label htmlFor="sort-filter">Sắp xếp</Label>
-            <Select 
-              value={localFilters.sort || 'default'} 
+            <Select
+              value={localFilters.sort || 'default'}
               onValueChange={(value) => handleFilterChange('sort', value === 'default' ? '' : value)}
             >
               <SelectTrigger id="sort-filter">
@@ -193,7 +192,7 @@ export const TransactionFilters = ({
               <Calendar className="h-4 w-4" />
               Bộ lọc nâng cao
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-date">Từ ngày</Label>

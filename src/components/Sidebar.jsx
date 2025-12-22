@@ -176,7 +176,7 @@ export function Sidebar({ className }) {
                     </div>
 
                     {badgeValue ? (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge variant="destructive" className="text-xs text-white">
                         {badgeValue}
                       </Badge>
                     ) : active ? (
@@ -186,7 +186,7 @@ export function Sidebar({ className }) {
                 )}
 
                 {isCollapsed && badgeValue && (
-                  <Badge variant="destructive" className="absolute -top-1 -right-1 text-xs w-5 h-5 p-0 flex items-center justify-center">
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 text-xs w-5 h-5 p-0 flex items-center justify-center text-white">
                     {badgeValue}
                   </Badge>
                 )}

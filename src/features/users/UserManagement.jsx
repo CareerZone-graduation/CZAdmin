@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,18 +28,52 @@ import {
 
 export function UserManagement() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL parameters
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchInput, setSearchInput] = useState(''); // Separate state for input value
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [companyRegistrationFilter, setCompanyRegistrationFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+  const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || 'all');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
+  const [companyRegistrationFilter, setCompanyRegistrationFilter] = useState(searchParams.get('company') || 'all');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [sortBy, setSortBy] = useState('-createdAt');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-createdAt');
   const limit = 10;
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('q', searchTerm);
+    if (roleFilter !== 'all') params.set('role', roleFilter);
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (companyRegistrationFilter !== 'all') params.set('company', companyRegistrationFilter);
+    if (currentPage > 1) params.set('page', currentPage.toString());
+    if (sortBy !== '-createdAt') params.set('sort', sortBy);
+
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, roleFilter, statusFilter, companyRegistrationFilter, currentPage, sortBy, setSearchParams]);
+
+  // Handle external search params changes (e.g. browser back button)
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const role = searchParams.get('role') || 'all';
+    const status = searchParams.get('status') || 'all';
+    const company = searchParams.get('company') || 'all';
+    const page = parseInt(searchParams.get('page')) || 1;
+    const sort = searchParams.get('sort') || '-createdAt';
+
+    if (q !== searchTerm) setSearchTerm(q);
+    if (q !== searchInput) setSearchInput(q);
+    if (role !== roleFilter) setRoleFilter(role);
+    if (status !== statusFilter) setStatusFilter(status);
+    if (company !== companyRegistrationFilter) setCompanyRegistrationFilter(company);
+    if (page !== currentPage) setCurrentPage(page);
+    if (sort !== sortBy) setSortBy(sort);
+  }, [searchParams]); // Only run when URL params change
 
   // Fetch users data
   const fetchUsers = useCallback(async () => {
@@ -68,7 +102,7 @@ export function UserManagement() {
       }
 
       const response = await getUsers(params);
-      
+
       setUsers(response.data.data || []);
       setTotalPages(response.data?.meta?.totalPages || 1);
       setTotalItems(response.data?.meta?.totalItems || 0);
@@ -88,11 +122,15 @@ export function UserManagement() {
     fetchUsers();
   }, [fetchUsers]);
 
+  const isFirstRender = useRef(true);
+
   // Reset to first page when filters change
   useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
+    setCurrentPage(1);
   }, [searchTerm, roleFilter, statusFilter, companyRegistrationFilter, sortBy]);
 
   // Handle search action
@@ -116,13 +154,13 @@ export function UserManagement() {
   const handleStatusChange = useCallback(async (userId, newStatus) => {
     try {
       // Optimistically update UI
-      setUsers(prev => prev.map(user => 
+      setUsers(prev => prev.map(user =>
         user._id === userId ? { ...user, active: newStatus === 'active' } : user
       ));
 
       // Call API to update status
       await updateUserStatus(userId, { status: newStatus });
-      
+
       toast.success(`User ${newStatus === 'active' ? 'activated' : 'banned'} successfully`);
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -158,7 +196,7 @@ export function UserManagement() {
   };
 
   const getStatusBadge = (active) => {
-    return active ? 
+    return active ?
       <Badge className="bg-green-100 text-green-800">{t('users.active')}</Badge> :
       <Badge variant="destructive">{t('users.banned')}</Badge>;
   };
@@ -339,8 +377,12 @@ export function UserManagement() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                            <User className="w-6 h-6 text-gray-600" />
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
+                            {user.avatar ? (
+                              <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-6 h-6 text-gray-600" />
+                            )}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
