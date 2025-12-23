@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { getUsers, updateUserStatus } from '@/services/userService';
 import { UserStats } from './UserStats'; // <-- IMPORT COMPONENT MỚI
 import { Pagination } from '@/components/common/Pagination';
+import ReasonDialog from '@/components/common/ReasonDialog';
 import { t } from '@/constants/translations';
 import {
   Search,
@@ -43,6 +44,12 @@ export function UserManagement() {
   const [totalItems, setTotalItems] = useState(0);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-createdAt');
   const limit = 10;
+
+  // States for ReasonDialog
+  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
+  const [statusChangingUser, setStatusChangingUser] = useState(null);
+  const [newStatusPending, setNewStatusPending] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Sync state to URL
   useEffect(() => {
@@ -151,24 +158,36 @@ export function UserManagement() {
     setSearchTerm('');
   };
 
-  const handleStatusChange = useCallback(async (userId, newStatus) => {
+  const handleStatusChangeClick = (userId, newStatus) => {
+    setStatusChangingUser(users.find(u => u._id === userId));
+    setNewStatusPending(newStatus);
+    setReasonDialogOpen(true);
+  };
+
+  const confirmStatusChange = async (reason) => {
+    if (!statusChangingUser) return;
+
     try {
-      // Optimistically update UI
+      setIsUpdatingStatus(true);
+      const userId = statusChangingUser._id;
+
+      // Call API to update status with reason
+      await updateUserStatus(userId, { status: newStatusPending, reason });
+
+      // Update UI after success
       setUsers(prev => prev.map(user =>
-        user._id === userId ? { ...user, active: newStatus === 'active' } : user
+        user._id === userId ? { ...user, active: newStatusPending === 'active' } : user
       ));
 
-      // Call API to update status
-      await updateUserStatus(userId, { status: newStatus });
-
-      toast.success(`User ${newStatus === 'active' ? 'activated' : 'banned'} successfully`);
+      toast.success(newStatusPending === 'active' ? 'Đã kích hoạt người dùng thành công' : 'Đã khóa người dùng thành công');
+      setReasonDialogOpen(false);
     } catch (error) {
       console.error('Error updating user status:', error);
-      toast.error('Failed to update user status');
-      // Revert the change on error
-      fetchUsers();
+      toast.error('Không thể cập nhật trạng thái người dùng');
+    } finally {
+      setIsUpdatingStatus(false);
     }
-  }, [fetchUsers]);
+  };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -204,16 +223,16 @@ export function UserManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('users.title')}</h1>
-        <p className="text-gray-600">{t('users.description')}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('users.title')}</h1>
+        <p className="text-slate-500">{t('users.description')}</p>
       </div>
 
       {/* THÊM COMPONENT THỐNG KÊ TẠI ĐÂY */}
       <UserStats />
 
-      <Card>
+      <Card className="border-none shadow-xl shadow-slate-200/50">
         <CardHeader>
-          <CardTitle>{t('users.directory')}</CardTitle>
+          <CardTitle className="text-xl font-bold">{t('users.directory')}</CardTitle>
           <CardDescription>
             {t('users.directoryDescription')}
           </CardDescription>
@@ -227,7 +246,7 @@ export function UserManagement() {
                 value={searchInput}
                 onChange={handleSearchChange}
                 onKeyPress={handleSearchKeyPress}
-                className="pl-10 pr-20"
+                className="pl-10 pr-20 focus-visible:ring-blue-500"
               />
               <div className="absolute right-2 top-2 flex gap-1">
                 {searchInput && (
@@ -235,23 +254,23 @@ export function UserManagement() {
                     size="sm"
                     variant="ghost"
                     onClick={handleClearSearch}
-                    className="h-6 w-6 p-0"
+                    className="h-6 w-6 p-0 hover:bg-slate-100"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3 h-3 text-slate-500" />
                   </Button>
                 )}
                 <Button
                   size="sm"
                   onClick={handleSearch}
                   disabled={loading}
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-3 text-xs bg-blue-600 hover:bg-blue-700"
                 >
                   {t('common.search')}
                 </Button>
               </div>
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-white border-slate-200 focus:ring-blue-500">
                 <SelectValue placeholder={t('users.filterByRole')} />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +280,7 @@ export function UserManagement() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-white border-slate-200 focus:ring-blue-500">
                 <SelectValue placeholder={t('users.filterByStatus')} />
               </SelectTrigger>
               <SelectContent>
@@ -272,7 +291,7 @@ export function UserManagement() {
             </Select>
             {roleFilter === 'recruiter' && (
               <Select value={companyRegistrationFilter} onValueChange={setCompanyRegistrationFilter}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 bg-white border-slate-200 focus:ring-blue-500">
                   <SelectValue placeholder="Trạng thái công ty" />
                 </SelectTrigger>
                 <SelectContent>
@@ -283,7 +302,7 @@ export function UserManagement() {
               </Select>
             )}
             <Select value={sortBy} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-white border-slate-200 focus:ring-blue-500">
                 <SelectValue placeholder={t('users.sortBy')} />
               </SelectTrigger>
               <SelectContent>
@@ -297,47 +316,47 @@ export function UserManagement() {
 
           {/* Active filters indicator */}
           {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all' || companyRegistrationFilter !== 'all') && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
-              <span className="text-sm text-blue-700 font-medium">{t('users.activeFilters')}</span>
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50/50 rounded-2xl border border-blue-100">
+              <span className="text-sm text-blue-700 font-semibold mr-2">{t('users.activeFilters')}</span>
               {searchTerm && (
-                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>{t('common.search')}: "{searchTerm}"</span>
+                <div className="flex items-center gap-1 bg-white text-blue-800 px-3 py-1 rounded-xl text-xs border border-blue-200 shadow-sm">
+                  <span>{t('common.search')}: <span className="font-bold">"{searchTerm}"</span></span>
                   <button
                     onClick={handleClearSearch}
-                    className="ml-1 hover:bg-blue-200 rounded p-0.5"
+                    className="ml-1 hover:bg-slate-100 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {roleFilter !== 'all' && (
-                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>Vai trò: {roleFilter}</span>
+                <div className="flex items-center gap-1 bg-white text-blue-800 px-3 py-1 rounded-xl text-xs border border-blue-200 shadow-sm">
+                  <span>Vai trò: <span className="font-bold">{roleFilter}</span></span>
                   <button
                     onClick={() => setRoleFilter('all')}
-                    className="ml-1 hover:bg-blue-200 rounded p-0.5"
+                    className="ml-1 hover:bg-slate-100 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {statusFilter !== 'all' && (
-                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>{t('common.status')}: {statusFilter}</span>
+                <div className="flex items-center gap-1 bg-white text-blue-800 px-3 py-1 rounded-xl text-xs border border-blue-200 shadow-sm">
+                  <span>{t('common.status')}: <span className="font-bold">{statusFilter}</span></span>
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className="ml-1 hover:bg-blue-200 rounded p-0.5"
+                    className="ml-1 hover:bg-slate-100 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {companyRegistrationFilter !== 'all' && (
-                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>Công ty: {companyRegistrationFilter === 'registered' ? 'Đã đăng ký' : 'Chưa đăng ký'}</span>
+                <div className="flex items-center gap-1 bg-white text-blue-800 px-3 py-1 rounded-xl text-xs border border-blue-200 shadow-sm">
+                  <span>Công ty: <span className="font-bold">{companyRegistrationFilter === 'registered' ? 'Đã đăng ký' : 'Chưa đăng ký'}</span></span>
                   <button
                     onClick={() => setCompanyRegistrationFilter('all')}
-                    className="ml-1 hover:bg-blue-200 rounded p-0.5"
+                    className="ml-1 hover:bg-slate-100 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -351,13 +370,13 @@ export function UserManagement() {
           ) : (
             <>
               {/* Results count */}
-              <div className="flex justify-between items-center mb-4">
-                <div className="text-sm text-gray-600">
+              <div className="flex justify-between items-center mb-6">
+                <div className="text-sm text-slate-500">
                   {totalItems > 0 ? (
                     <>
-                      {t('users.showing')} {((currentPage - 1) * limit) + 1} {t('users.to')} {Math.min(currentPage * limit, totalItems)} {t('users.of')} {totalItems} người dùng
+                      {t('users.showing')} <span className="font-bold text-slate-900">{((currentPage - 1) * limit) + 1}</span> {t('users.to')} <span className="font-bold text-slate-900">{Math.min(currentPage * limit, totalItems)}</span> {t('users.of')} <span className="font-bold text-slate-900">{totalItems}</span> người dùng
                       {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all' || companyRegistrationFilter !== 'all') && (
-                        <span className="text-blue-600 ml-1">{t('users.filtered')}</span>
+                        <span className="text-blue-600 ml-1 font-medium">{t('users.filtered')}</span>
                       )}
                     </>
                   ) : (
@@ -365,79 +384,84 @@ export function UserManagement() {
                   )}
                 </div>
                 {totalItems > 0 && (
-                  <div className="text-sm text-gray-500">
-                    {t('users.page')} {currentPage} {t('users.of')} {totalPages}
+                  <div className="text-sm font-medium text-slate-400">
+                    {t('users.page')} <span className="text-slate-900">{currentPage}</span> / {totalPages}
                   </div>
                 )}
               </div>
 
               <div className="space-y-4">
                 {users.map((user) => (
-                  <Card key={user._id} className="border border-gray-200">
+                  <Card key={user._id} className="border border-slate-100 hover:shadow-lg hover:shadow-slate-200/50 transition-all group">
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
-                            {user.avatar ? (
-                              <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-6 h-6 text-gray-600" />
-                            )}
+                          <div className="relative">
+                            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-200 shadow-inner group-hover:scale-110 transition-transform">
+                              {user.avatar ? (
+                                <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-7 h-7 text-slate-400" />
+                              )}
+                            </div>
+                            {user.active && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full" />}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h3 className="font-semibold">{user.fullname || 'Chưa cập nhật'}</h3>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h3 className="font-bold text-slate-900 text-lg">{user.fullname || 'Chưa cập nhật'}</h3>
                               {getRoleBadge(user.role)}
                               {getStatusBadge(user.active)}
                               {user.role === 'recruiter' && user.hasCompany === false && (
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-bold text-[10px] uppercase">
                                   Chưa đăng ký công ty
                                 </Badge>
                               )}
                               {user.role === 'recruiter' && user.hasCompany === true && (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-bold text-[10px] uppercase">
                                   <Building2 className="w-3 h-3 mr-1" />
                                   Có công ty
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <div className="flex items-center space-x-1">
-                                <Mail className="w-3 h-3" />
+                            <div className="flex items-center flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500">
+                              <div className="flex items-center space-x-1.5">
+                                <Mail className="w-4 h-4 text-slate-300" />
                                 <span>{user.email}</span>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="w-3 h-3" />
-                                <span>{t('users.joined')} {new Date(user.createdAt).toLocaleDateString('vi-VN')}</span>
+                              <div className="flex items-center space-x-1.5">
+                                <Calendar className="w-4 h-4 text-slate-300" />
+                                <span>{t('users.joined')} <span className="font-medium text-slate-700">{new Date(user.createdAt).toLocaleDateString('vi-VN')}</span></span>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-3">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => navigate(`/users/${user._id}`)}
+                            className="h-10 px-4 rounded-xl border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all font-semibold"
                           >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Xem chi tiết
+                            <Eye className="w-4 h-4 mr-2" />
+                            Chi tiết
                           </Button>
                           {user.active ? (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleStatusChange(user._id, 'banned')}
+                              onClick={() => handleStatusChangeClick(user._id, 'banned')}
+                              className="h-10 px-4 rounded-xl border-slate-200 text-slate-600 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all font-semibold"
                             >
-                              <UserX className="w-4 h-4 mr-1" />
+                              <UserX className="w-4 h-4 mr-2" />
                               {t('users.banUser')}
                             </Button>
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => handleStatusChange(user._id, 'active')}
+                              onClick={() => handleStatusChangeClick(user._id, 'active')}
+                              className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/50 transition-all font-semibold"
                             >
-                              <UserCheck className="w-4 h-4 mr-1" />
+                              <UserCheck className="w-4 h-4 mr-2" />
                               {t('users.activate')}
                             </Button>
                           )}
@@ -449,17 +473,19 @@ export function UserManagement() {
               </div>
 
               {users.length === 0 && !loading && (
-                <div className="text-center py-8">
-                  <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">{t('users.noUsersFound')}</p>
+                <div className="text-center py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+                  <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-6">
+                    <User className="w-10 h-10 text-slate-200" />
+                  </div>
+                  <p className="text-slate-400 font-bold text-lg">{t('users.noUsersFound')}</p>
                 </div>
               )}
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
-                    Trang {currentPage} trên {totalPages}
+                <div className="flex items-center justify-between mt-10">
+                  <div className="text-sm text-slate-400 font-medium">
+                    Trang <span className="text-slate-900 font-bold">{currentPage}</span> / {totalPages}
                   </div>
                   <Pagination
                     currentPage={currentPage}
@@ -473,6 +499,23 @@ export function UserManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Status Change Reason Dialog */}
+      <ReasonDialog
+        open={reasonDialogOpen}
+        onOpenChange={setReasonDialogOpen}
+        title={newStatusPending === 'active' ? t('users.unlockTitle') : t('users.lockTitle')}
+        description={
+          newStatusPending === 'active'
+            ? `${t('users.unlockDescription')} (${statusChangingUser?.fullname || statusChangingUser?.email})`
+            : `${t('users.lockDescription')} (${statusChangingUser?.fullname || statusChangingUser?.email})`
+        }
+        confirmText={newStatusPending === 'active' ? t('users.confirmUnlock') : t('users.confirmLock')}
+        variant={newStatusPending === 'active' ? 'default' : 'destructive'}
+        placeholder={t('users.reasonPlaceholder')}
+        isLoading={isUpdatingStatus}
+        onConfirm={confirmStatusChange}
+      />
     </div>
   );
 }

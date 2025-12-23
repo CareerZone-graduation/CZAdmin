@@ -9,7 +9,7 @@ export const TRANSLATIONS = {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     sort: 'Sắp xếp',
-   
+
     refresh: 'Làm mới',
     loading: 'Đang tải...',
     save: 'Lưu',
@@ -24,7 +24,7 @@ export const TRANSLATIONS = {
     actions: 'Hành động',
     status: 'Trạng thái',
     dateRange: 'Khoảng thời gian',
-   
+
   },
 
   // Sidebar Navigation
@@ -142,7 +142,17 @@ export const TRANSLATIONS = {
 
     // Status
     active: 'Hoạt động',
-    banned: 'Đã cấm',
+    banned: 'Đã khóa',
+
+    // Reason dialog
+    lockTitle: 'Khóa tài khoản',
+    unlockTitle: 'Kích hoạt tài khoản',
+    lockDescription: 'Vui lòng nhập lý do khóa tài khoản để gửi thông báo cho người dùng.',
+    unlockDescription: 'Vui lòng nhập lý do kích hoạt lại tài khoản để gửi thông báo cho người dùng.',
+    reasonLabel: 'Lý do',
+    reasonPlaceholder: 'Nhập lý do tại đây...',
+    confirmLock: 'Xác nhận khóa',
+    confirmUnlock: 'Xác nhận kích hoạt',
 
     // Backend field mapping
     roleField: 'role', // Maps to backend field name

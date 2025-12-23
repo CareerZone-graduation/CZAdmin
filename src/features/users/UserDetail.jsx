@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getUserDetail, updateUserStatus } from '@/services/userService';
 import { EntityNavigationLink } from '@/components/common/EntityNavigationLink';
+import ReasonDialog from '@/components/common/ReasonDialog';
+import { t } from '@/constants/translations';
 import {
   ArrowLeft,
   User,
@@ -40,6 +42,10 @@ export function UserDetail() {
   const [userDetail, setUserDetail] = useState(null);
   const [updating, setUpdating] = useState(false);
 
+  // States for ReasonDialog
+  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
+  const [statusChangingTo, setStatusChangingTo] = useState('');
+
   useEffect(() => {
     const fetchUserDetail = async () => {
       try {
@@ -57,15 +63,20 @@ export function UserDetail() {
     fetchUserDetail();
   }, [id]);
 
-  const handleToggleStatus = async () => {
+  const handleStatusChangeClick = () => {
+    setStatusChangingTo(userDetail.active ? 'banned' : 'active');
+    setReasonDialogOpen(true);
+  };
+
+  const confirmStatusChange = async (reason) => {
     try {
       setUpdating(true);
-      const newStatus = userDetail.active ? 'banned' : 'active';
-      const response = await updateUserStatus(id, { status: newStatus });
+      const response = await updateUserStatus(id, { status: statusChangingTo, reason });
 
       if (response.data.success) {
-        toast.success(userDetail.active ? 'Đã khóa tài khoản' : 'Đã kích hoạt tài khoản');
-        setUserDetail(prev => ({ ...prev, active: !prev.active }));
+        toast.success(statusChangingTo === 'active' ? 'Đã kích hoạt tài khoản thành công' : 'Đã khóa tài khoản thành công');
+        setUserDetail(prev => ({ ...prev, active: statusChangingTo === 'active' }));
+        setReasonDialogOpen(false);
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -122,8 +133,8 @@ export function UserDetail() {
 
   const getStatusBadge = (active) => {
     return active ?
-      <Badge className="bg-green-100 text-green-800">Hoạt động</Badge> :
-      <Badge variant="destructive">Đã khóa</Badge>;
+      <Badge className="bg-green-100 text-green-800">{t('users.active')}</Badge> :
+      <Badge variant="destructive">{t('users.banned')}</Badge>;
   };
 
   return (
@@ -151,8 +162,8 @@ export function UserDetail() {
             userDetail.active ? (
               <Button
                 variant="outline"
-                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                onClick={handleToggleStatus}
+                className="h-11 px-6 rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold shadow-sm shadow-red-100 transition-all active:scale-95"
+                onClick={handleStatusChangeClick}
                 disabled={updating}
               >
                 {updating ? <Clock className="w-4 h-4 mr-2 animate-spin" /> : <Shield className="w-4 h-4 mr-2" />}
@@ -161,8 +172,8 @@ export function UserDetail() {
             ) : (
               <Button
                 variant="outline"
-                className="border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-                onClick={handleToggleStatus}
+                className="h-11 px-6 rounded-2xl border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 font-bold shadow-sm shadow-emerald-100 transition-all active:scale-95"
+                onClick={handleStatusChangeClick}
                 disabled={updating}
               >
                 {updating ? <Clock className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
@@ -696,6 +707,23 @@ export function UserDetail() {
           )}
         </div>
       </div>
+
+      {/* Status Change Reason Dialog */}
+      <ReasonDialog
+        open={reasonDialogOpen}
+        onOpenChange={setReasonDialogOpen}
+        title={statusChangingTo === 'active' ? t('users.unlockTitle') : t('users.lockTitle')}
+        description={
+          statusChangingTo === 'active'
+            ? `${t('users.unlockDescription')} (${userDetail.profile?.fullname || userDetail.email})`
+            : `${t('users.lockDescription')} (${userDetail.profile?.fullname || userDetail.email})`
+        }
+        confirmText={statusChangingTo === 'active' ? t('users.confirmUnlock') : t('users.confirmLock')}
+        variant={statusChangingTo === 'active' ? 'default' : 'destructive'}
+        placeholder={t('users.reasonPlaceholder')}
+        isLoading={updating}
+        onConfirm={confirmStatusChange}
+      />
     </div>
   );
 }
