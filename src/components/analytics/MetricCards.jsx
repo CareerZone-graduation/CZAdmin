@@ -21,9 +21,8 @@ import { systemHealth } from '@/data/analyticsData'; // Will be deprecated
 import { Skeleton } from '@/components/ui/skeleton';
 import { t } from '@/constants/translations';
 
-// Enhanced Metric Card Component with gradient backgrounds
-const MetricCard = ({ title, value, change, trend, icon: Icon, description, color = "blue" }) => {
-  // Gradient backgrounds cho từng màu
+// Simple Metric Card - Không có % tăng trưởng (dùng cho Tổng quan nâng cao)
+const SimpleMetricCard = ({ title, value, icon: Icon, color = "blue" }) => {
   const colorClasses = {
     blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
     green: "bg-gradient-to-br from-green-500 to-green-600 text-white",
@@ -33,7 +32,41 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, description, colo
     indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white"
   };
 
-  // Icon background với màu trắng nhạt
+  const iconBgClasses = {
+    blue: "bg-white/20",
+    green: "bg-white/20",
+    orange: "bg-white/20",
+    purple: "bg-white/20",
+    red: "bg-white/20",
+    indigo: "bg-white/20"
+  };
+
+  return (
+    <Card className={`relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-shadow duration-300 ${colorClasses[color]} rounded-2xl`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-xs font-medium text-white/80 uppercase tracking-wide">{title}</CardTitle>
+        <div className={`p-3 rounded-xl ${iconBgClasses[color]} backdrop-blur-sm`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+      </CardHeader>
+      <CardContent className="pb-5">
+        <div className="text-4xl font-bold text-white mb-2 tracking-tight">{value}</div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Full Metric Card - Có % tăng trưởng (dùng cho Phân tích KPI)
+const MetricCard = ({ title, value, change, trend, icon: Icon, description, color = "blue" }) => {
+  const colorClasses = {
+    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
+    green: "bg-gradient-to-br from-green-500 to-green-600 text-white",
+    orange: "bg-gradient-to-br from-orange-500 to-orange-600 text-white",
+    purple: "bg-gradient-to-br from-purple-500 to-purple-600 text-white",
+    red: "bg-gradient-to-br from-red-500 to-red-600 text-white",
+    indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white"
+  };
+
   const iconBgClasses = {
     blue: "bg-white/20",
     green: "bg-white/20",
@@ -56,11 +89,13 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, description, colo
       </CardHeader>
       <CardContent className="pb-5">
         <div className="text-4xl font-bold text-white mb-2 tracking-tight">{value}</div>
-        <div className={`flex items-center text-sm ${trendColor} font-medium`}>
-          <TrendIcon className="w-4 h-4 mr-1" />
-          {change}
-          {description && <span className="text-white/70 ml-1 text-xs">{t('dashboard.fromLastMonth')}</span>}
-        </div>
+        {change && (
+          <div className={`flex items-center text-sm ${trendColor} font-medium`}>
+            <TrendIcon className="w-4 h-4 mr-1" />
+            {change}
+            {description && <span className="text-white/70 ml-1 text-xs">{t('dashboard.fromLastMonth')}</span>}
+          </div>
+        )}
         {description && (
           <p className="text-xs text-white/70 mt-2">{description}</p>
         )}
@@ -259,48 +294,36 @@ export const EnhancedStatsCards = () => {
           {
             title: t('dashboard.totalUsers'),
             value: data.totalUsers.toLocaleString(),
-            change: `${data.growth.users >= 0 ? '+' : ''}${data.growth.users}%`,
-            trend: data.growth.users >= 0 ? 'up' : 'down',
             icon: Users,
             color: 'blue'
           },
           {
             title: t('dashboard.activeCompanies'),
             value: data.activeCompanies.toLocaleString(),
-            change: `${data.growth.companies >= 0 ? '+' : ''}${data.growth.companies}%`,
-            trend: data.growth.companies >= 0 ? 'up' : 'down',
             icon: Building2,
             color: 'green'
           },
           {
             title: t('dashboard.jobListings'),
             value: data.jobListings.toLocaleString(),
-            change: `${data.growth.jobs >= 0 ? '+' : ''}${data.growth.jobs}%`,
-            trend: data.growth.jobs >= 0 ? 'up' : 'down',
             icon: Briefcase,
             color: 'purple'
           },
           {
             title: `Doanh thu tháng ${data.currentMonth || new Date().getMonth() + 1}`,
             value: `${(data.currentMonthRevenue || 0).toLocaleString()} VNĐ`,
-            change: `${data.growth.revenue >= 0 ? '+' : ''}${data.growth.revenue}% so với tháng trước`,
-            trend: data.growth.revenue >= 0 ? 'up' : 'down',
             icon: DollarSign,
             color: 'orange'
           },
           {
             title: t('dashboard.totalApplications'),
             value: data.totalApplications.toLocaleString(),
-            change: `${data.growth.applications >= 0 ? '+' : ''}${data.growth.applications}%`,
-            trend: data.growth.applications >= 0 ? 'up' : 'down',
             icon: BarChart3,
             color: 'indigo'
           },
           {
             title: t('dashboard.totalInterviews'),
             value: data.totalInterviews.toLocaleString(),
-            change: `${data.growth.interviews >= 0 ? '+' : ''}${data.growth.interviews}%`,
-            trend: data.growth.interviews >= 0 ? 'up' : 'down',
             icon: Award,
             color: 'red'
           }
@@ -339,12 +362,10 @@ export const EnhancedStatsCards = () => {
   return (
     <>
       {stats.map((stat, index) => (
-        <MetricCard
+        <SimpleMetricCard
           key={index}
           title={stat.title}
           value={stat.value}
-          change={stat.change}
-          trend={stat.trend}
           icon={stat.icon}
           color={stat.color}
         />
