@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJob } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
@@ -26,7 +26,8 @@ import {
   ChevronsUpDown,
   Clock,
   AlertCircle,
-  Ban
+  Ban,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -231,6 +232,31 @@ export function JobManagement() {
       toast.success('Đã từ chối công việc');
     } catch (error) {
       toast.error(error.message || 'Không thể từ chối công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchStats]);
+
+  const handleAIModerateJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      const response = await aiModerateJob(jobId);
+      
+      if (response.data?.success) {
+        const { job, aiResult } = response.data.data;
+        
+        // Update local state
+        setJobs(prev => prev.map(j =>
+          j._id === jobId ? { ...j, ...job } : j
+        ));
+        
+        fetchStats();
+        
+        const status = aiResult.shouldApprove ? 'phê duyệt' : 'từ chối';
+        toast.success(`AI đã ${status} công việc (độ tin cậy: ${(aiResult.confidence * 100).toFixed(1)}%)`);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Không thể duyệt job bằng AI');
     } finally {
       setLoading(false);
     }
@@ -490,6 +516,16 @@ export function JobManagement() {
                         </Button>
                         {job.moderationStatus === 'PENDING' && (
                           <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAIModerateJob(job._id)}
+                              disabled={loading}
+                              className="whitespace-nowrap px-4 py-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              AI Duyệt
+                            </Button>
                             <Button
                               size="sm"
                               variant="destructive"

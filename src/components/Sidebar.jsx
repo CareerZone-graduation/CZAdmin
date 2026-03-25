@@ -12,7 +12,9 @@ import {
   LifeBuoy,
   ChevronRight,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logoutUser } from '@/features/auth/authSlice';

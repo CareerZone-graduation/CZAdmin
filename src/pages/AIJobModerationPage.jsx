@@ -1,11 +1,11 @@
 import React from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
-import { JobManagementTabs } from '@/features/jobs/JobManagementTabs';
+import { AIJobModeration } from '@/features/jobs/AIJobModeration';
 
-export function JobManagementPage() {
+export function AIJobModerationPage() {
   return (
     <DashboardLayout>
-      <JobManagementTabs />
+      <AIJobModeration />
     </DashboardLayout>
   );
 }

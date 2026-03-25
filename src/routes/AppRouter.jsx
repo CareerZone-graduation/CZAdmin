@@ -10,6 +10,8 @@ import { CompanyDetailPage } from '@/pages/CompanyDetailPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
 import { UserDetailPage } from '@/pages/UserDetailPage';
 import { JobManagementPage } from '@/pages/JobManagementPage';
+import { AIJobModerationPage } from '@/pages/AIJobModerationPage';
+import { AIModeratedJobsPage } from '@/pages/AIModeratedJobsPage';
 import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
 import { AdminSupportDashboard } from '@/pages/support/AdminSupportDashboard';
 import { AdminSupportRequestDetail } from '@/pages/support/AdminSupportRequestDetail';
