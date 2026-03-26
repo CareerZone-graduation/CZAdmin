@@ -76,7 +76,7 @@ export const aiModerateJob = async (jobId) => {
 
 // AI Auto Moderate Job with LLM (more accurate with detailed reasons)
 export const aiModerateJobLLM = async (jobId) => {
-  return await apiClient.post(`/admin/jobs/${jobId}/ai-moderate-llm`, {}, { showToast: true })
+  return await apiClient.post(`/admin/jobs/${jobId}/ai-moderate-llm`, {}, { showToast: false })
 }
 
 // Reset job to PENDING status (undo AI moderation)

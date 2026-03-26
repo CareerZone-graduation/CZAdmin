@@ -13,6 +13,7 @@ import { AIResultDetailModal } from '@/components/jobs/AIResultDetailModal';
 
 export function AIJobModeration() {
   const [pendingJobs, setPendingJobs] = useState([]);
+  const [filteredPendingJobs, setFilteredPendingJobs] = useState([]);
   const [neutralJobs, setNeutralJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -23,6 +24,8 @@ export function AIJobModeration() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [autoModerationEnabled, setAutoModerationEnabled] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt:desc');
   // Always use LLM - PhoBERT is not accurate without training
 
   // Load auto-moderation status
@@ -73,11 +76,15 @@ const handleApprove = async (jobId) => {
   useEffect(() => {
     if (!autoModerationEnabled) return;
 
+    let isFirstRun = true;
+
     const moderatePendingJobs = async () => {
       if (pendingJobs.length === 0 || processing) return;
 
       console.log('🤖 Auto-moderation is ON, moderating pending jobs...');
-      await handleModerateAll();
+      // Chỉ hiển thị toast lần đầu tiên, các lần sau chạy im lặng
+      await handleModerateAll(!isFirstRun);
+      isFirstRun = false;
     };
 
     // Check and moderate immediately
@@ -97,12 +104,10 @@ const handleApprove = async (jobId) => {
       if (response.data?.success) {
         setAutoModerationEnabled(enabled);
         
-        if (enabled) {
-          toast.success('✅ Đã bật tự động duyệt - Đang duyệt tất cả job chờ duyệt...');
-          // Will trigger auto-moderation via useEffect
-        } else {
+        if (!enabled) {
           toast.success('⏸️ Đã tắt tự động duyệt');
         }
+        // Không hiển thị toast khi bật, để handleModerateAll hiển thị kết quả
       }
     } catch (error) {
       toast.error('Không thể thay đổi cài đặt tự động duyệt');
@@ -122,6 +127,7 @@ const handleApprove = async (jobId) => {
           job => job.moderationStatus !== 'NEUTRAL'
         );
         setPendingJobs(validPendingJobs);
+        setFilteredPendingJobs(validPendingJobs);
       }
     } catch (error) {
       toast.error('Không thể tải danh sách job chờ duyệt');
@@ -129,6 +135,37 @@ const handleApprove = async (jobId) => {
       setLoading(false);
     }
   }, []);
+
+  // Filter and sort pending jobs
+  useEffect(() => {
+    let filtered = [...pendingJobs];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(job =>
+        job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.recruiterProfileId?.company?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'createdAt:desc':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'createdAt:asc':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'title:asc':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'title:desc':
+          return (b.title || '').localeCompare(a.title || '');
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPendingJobs(filtered);
+  }, [pendingJobs, searchTerm, sortBy]);
 
   const fetchNeutralJobs = useCallback(async () => {
     try {
@@ -160,11 +197,20 @@ const handleApprove = async (jobId) => {
     
     // Load neutral jobs
     fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+
+    // Auto-refresh mỗi 10 giây để cập nhật job mới
+    const refreshInterval = setInterval(() => {
+      fetchPendingJobs();
+      fetchStats();
+      fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(refreshInterval);
   }, [fetchPendingJobs, fetchStats, fetchNeutralJobs]);
 
-  const handleModerateAll = async () => {
+  const handleModerateAll = async (silent = false) => {
     if (pendingJobs.length === 0) {
-      toast.info('Không có job nào cần duyệt');
+      if (!silent) toast.info('Không có job nào cần duyệt');
       return;
     }
 
@@ -175,43 +221,70 @@ const handleApprove = async (jobId) => {
     const moderationResults = [];
     let successCount = 0;
     let failedCount = 0;
+    let approvedCount = 0;
+    let rejectedCount = 0;
+    
+    // Lưu số lượng job ban đầu để tránh bị thay đổi khi fetch
+    const totalJobs = pendingJobs.length;
 
-    for (let i = 0; i < pendingJobs.length; i++) {
+    for (let i = 0; i < totalJobs; i++) {
       setCurrentJobIndex(i + 1);
       const job = pendingJobs[i];
 
       try {
         const response = await aiModerateJobLLM(job._id);
         
+        console.log('AI Moderation Response:', response); // Debug log
+        
         if (response.data?.success) {
           const { aiResult } = response.data.data;
+          
+          if (!aiResult) {
+            console.error('aiResult is undefined for job:', job._id);
+            throw new Error('AI result is missing');
+          }
+          
+          const isApproved = aiResult.shouldApprove;
+          
           moderationResults.push({
             jobId: job._id,
             jobTitle: job.title,
             jobDescription: job.description || '',
             jobRequirements: job.requirements || '',
             success: true,
-            approved: aiResult.shouldApprove,
+            approved: isApproved,
             confidence: aiResult.confidence,
             probabilities: aiResult.probabilities || {
-              reject: aiResult.shouldApprove ? 1 - aiResult.confidence : aiResult.confidence,
-              approve: aiResult.shouldApprove ? aiResult.confidence : 1 - aiResult.confidence
+              reject: isApproved ? 1 - aiResult.confidence : aiResult.confidence,
+              approve: isApproved ? aiResult.confidence : 1 - aiResult.confidence
             },
             reasons: aiResult.reasons || [],
             summary: aiResult.summary || '',
             method: aiResult.method || 'LLM'
           });
+          
           successCount++;
+          if (isApproved) {
+            approvedCount++;
+          } else {
+            rejectedCount++;
+          }
         }
       } catch (error) {
         // Job thất bại sẽ được đánh dấu NEUTRAL và bỏ qua
-        console.warn(`⚠️ Bỏ qua job "${job.title}" do lỗi:`, error.message);
+        console.error(`❌ Error moderating job "${job.title}":`, error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        
         moderationResults.push({
           jobId: job._id,
           jobTitle: job.title,
           success: false,
           neutral: true, // Đánh dấu là NEUTRAL
-          error: error.message
+          error: error.message || 'Unknown error'
         });
         failedCount++;
       }
@@ -222,12 +295,11 @@ const handleApprove = async (jobId) => {
 
     setResults(moderationResults);
     setProcessing(false);
+    setCurrentJobIndex(0); // Reset về 0
     
-    // Hiển thị thông báo tổng kết
-    if (failedCount > 0) {
-      toast.warning(`Hoàn tất: ${successCount} job đã duyệt, ${failedCount} job không xác định (cần duyệt thủ công)`);
-    } else {
-      toast.success(`✅ Đã duyệt thành công ${successCount} job`);
+    // Hiển thị thông báo đơn giản (chỉ khi không phải auto-moderate)
+    if (!silent && totalJobs > 0) {
+      toast.success(`✅ AI đã xem xét thành công ${totalJobs} job`);
     }
     
     // Refresh data silently - wait for backend to update
@@ -295,7 +367,9 @@ const handleApprove = async (jobId) => {
     }
   };
 
-  const progress = pendingJobs.length > 0 ? (currentJobIndex / pendingJobs.length) * 100 : 0;
+  const progress = pendingJobs.length > 0 && currentJobIndex > 0 
+    ? (currentJobIndex / pendingJobs.length) * 100 
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -332,34 +406,34 @@ const handleApprove = async (jobId) => {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-700">Đã duyệt</p>
-                <p className="text-3xl font-bold text-green-900 mt-2">
-                  {results.filter(r => r.success && r.approved).length}
-                </p>
-              </div>
-              <CheckCircle className="w-12 h-12 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-red-700">Đã từ chối</p>
-                <p className="text-3xl font-bold text-red-900 mt-2">
-                  {results.filter(r => r.success && !r.approved).length}
-                </p>
-              </div>
-              <XCircle className="w-12 h-12 text-red-400" />
-            </div>
-          </CardContent>
-        </Card>
+         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">AI đã duyệt</p>
+                        <p className="text-3xl font-bold text-green-900 mt-2">
+                          {stats.aiApproved -1 || 0}
+                        </p>
+                      </div>
+                      <CheckCircle className="w-12 h-12 text-green-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+        
+                <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-red-700">AI đã từ chối</p>
+                        <p className="text-3xl font-bold text-red-900 mt-2">
+                          {stats.aiRejected-1 || 0}
+                        </p>
+                      </div>
+                      <XCircle className="w-12 h-12 text-red-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+       
       </div>
 
       {/* Auto Moderation Control */}
@@ -438,16 +512,41 @@ const handleApprove = async (jobId) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && pendingJobs.length === 0 ? (
+          {/* Search and Sort */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Tìm kiếm theo tên job hoặc công ty..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="createdAt:desc">Mới nhất</option>
+              <option value="createdAt:asc">Cũ nhất</option>
+              <option value="title:asc">Tên A-Z</option>
+              <option value="title:desc">Tên Z-A</option>
+            </select>
+          </div>
+
+          {loading && filteredPendingJobs.length === 0 ? (
             <div className="text-center py-8 text-gray-500">Đang tải...</div>
-          ) : pendingJobs.length === 0 ? (
+          ) : filteredPendingJobs.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <p className="text-gray-600">Không có job nào cần duyệt</p>
+              <p className="text-gray-600">
+                {searchTerm ? 'Không tìm thấy job phù hợp' : 'Không có job nào cần duyệt'}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {pendingJobs.map((job) => (
+              {filteredPendingJobs.map((job) => (
                 <div
                   key={job._id}
                   className="flex items-start justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"

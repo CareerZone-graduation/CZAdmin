@@ -70,7 +70,7 @@ export function JobManagementTabs() {
               </p>
               <p className="text-sm text-green-700 mt-1">
                 Tất cả job mới sẽ được AI tự động phân tích và duyệt ngay khi recruiter đăng tin.
-                Bạn có thể xem kết quả trong tab "Job Đã AI Duyệt".
+                Bạn có thể xem kết quả trong tab "Job AI Đã Duyệt".
               </p>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function JobManagementTabs() {
           >
             <Bot className="w-4 h-4" />
             <div className="text-left">
-              <div className="font-semibold">Job Đã AI Duyệt</div>
+              <div className="font-semibold">Job AI Đã Duyệt</div>
               <div className="text-xs opacity-80">Xem lịch sử AI</div>
             </div>
           </TabsTrigger>

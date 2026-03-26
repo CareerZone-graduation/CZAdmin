@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJob } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJobLLM } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
@@ -240,7 +240,7 @@ export function JobManagement() {
   const handleAIModerateJob = useCallback(async (jobId) => {
     try {
       setLoading(true);
-      const response = await aiModerateJob(jobId);
+      const response = await aiModerateJobLLM(jobId);
       
       if (response.data?.success) {
         const { job, aiResult } = response.data.data;
