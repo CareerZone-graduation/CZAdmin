@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { getAllJobsForAdmin, aiModerateJobLLM, getJobStatistics, resetJobToPending } from '@/services/jobService';
 import * as adminService from '@/services/adminService';
@@ -26,6 +28,9 @@ export function AIJobModeration() {
   const [toggleLoading, setToggleLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('createdAt:desc');
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingJobId, setRejectingJobId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
   // Always use LLM - PhoBERT is not accurate without training
 
   // Load auto-moderation status
@@ -57,13 +62,27 @@ const handleApprove = async (jobId) => {
     }
   };
 
-  const handleReject = async (jobId) => {
+  const handleRejectClick = (jobId) => {
+    setRejectingJobId(jobId);
+    setRejectionReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối');
+      return;
+    }
+
     try {
       setLoading(true);
-      await adminService.rejectJob(jobId);
+      await adminService.rejectJob(rejectingJobId, rejectionReason.trim());
       toast.success('❌ Đã từ chối job');
       // Remove from neutral list
-      setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+      setNeutralJobs(prev => prev.filter(j => j._id !== rejectingJobId));
+      setRejectDialogOpen(false);
+      setRejectingJobId(null);
+      setRejectionReason('');
       fetchStats();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Không thể từ chối job');
@@ -72,29 +91,52 @@ const handleApprove = async (jobId) => {
     }
   };
 
+  const handleReject = async (jobId) => {
+    // Deprecated - use handleRejectClick instead
+    handleRejectClick(jobId);
+  };
+
   // Auto-moderate pending jobs when enabled
   useEffect(() => {
     if (!autoModerationEnabled) return;
 
     let isFirstRun = true;
+    let isRunning = false;
+    let hasModeratedThisBatch = false; // Flag để tránh moderate lại cùng 1 batch
 
     const moderatePendingJobs = async () => {
-      if (pendingJobs.length === 0 || processing) return;
+      // Lấy pending jobs mới nhất từ state
+      if (pendingJobs.length === 0 || processing || isRunning) return;
 
+      // Nếu đã moderate batch này rồi, chỉ chạy lại sau 30s
+      if (hasModeratedThisBatch) return;
+
+      isRunning = true;
+      hasModeratedThisBatch = true; // Đánh dấu đã moderate batch này
       console.log('🤖 Auto-moderation is ON, moderating pending jobs...');
-      // Chỉ hiển thị toast lần đầu tiên, các lần sau chạy im lặng
-      await handleModerateAll(!isFirstRun);
-      isFirstRun = false;
+      
+      try {
+        // Chỉ hiển thị toast lần đầu tiên, các lần sau chạy im lặng
+        await handleModerateAll(!isFirstRun);
+        isFirstRun = false;
+      } finally {
+        isRunning = false;
+      }
     };
 
     // Check and moderate immediately
     moderatePendingJobs();
 
     // Then check every 30 seconds
-    const interval = setInterval(moderatePendingJobs, 30000);
+    const interval = setInterval(() => {
+      hasModeratedThisBatch = false; // Reset flag để cho phép moderate batch mới
+      moderatePendingJobs();
+    }, 30000);
 
-    return () => clearInterval(interval);
-  }, [autoModerationEnabled, pendingJobs.length, processing]);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [autoModerationEnabled, pendingJobs.length]); // Thêm lại pendingJobs.length
 
   const handleToggleAutoModeration = async (enabled) => {
     try {
@@ -693,6 +735,59 @@ const handleApprove = async (jobId) => {
         }}
         onUndo={handleUndoDecision}
       />
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="w-5 h-5" />
+              Từ chối tin tuyển dụng
+            </DialogTitle>
+            <DialogDescription>
+              Vui lòng nhập lý do từ chối để nhà tuyển dụng có thể cải thiện tin đăng của họ.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="rejection-reason" className="text-sm font-medium">
+                Lý do từ chối <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="Ví dụ: Nội dung công việc không rõ ràng, thiếu thông tin về yêu cầu ứng viên..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={5}
+                className="resize-none"
+              />
+              <p className="text-xs text-gray-500">
+                Lý do này sẽ được gửi đến nhà tuyển dụng qua thông báo
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRejectDialogOpen(false);
+                setRejectingJobId(null);
+                setRejectionReason('');
+              }}
+              disabled={loading}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleRejectConfirm}
+              disabled={loading || !rejectionReason.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

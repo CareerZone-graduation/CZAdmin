@@ -16,6 +16,6 @@ export const approveJob = async (jobId) => {
 };
 
 // Reject job (từ chối job)
-export const rejectJob = async (jobId) => {
-  return await apiClient.patch(`/admin/jobs/${jobId}/reject`);
+export const rejectJob = async (jobId, rejectionReason) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, { rejectionReason });
 };
