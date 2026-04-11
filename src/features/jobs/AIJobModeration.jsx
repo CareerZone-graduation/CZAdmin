@@ -31,6 +31,20 @@ export function AIJobModeration() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingJobId, setRejectingJobId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [recentActions, setRecentActions] = useState({}); // { jobId: 'APPROVED' | 'REJECTED' }
+
+  const triggerVisualFeedback = (jobId, status, callback) => {
+    setRecentActions(prev => ({ ...prev, [jobId]: status }));
+    // Wait for animation to finish before calling callback (removal)
+    setTimeout(() => {
+      setRecentActions(prev => {
+        const newState = { ...prev };
+        delete newState[jobId];
+        return newState;
+      });
+      if (callback) callback();
+    }, 1500); // Animation duration
+  };
   // Always use LLM - PhoBERT is not accurate without training
 
   // Load auto-moderation status
@@ -52,8 +66,12 @@ const handleApprove = async (jobId) => {
       setLoading(true);
       await adminService.approveJob(jobId);
       toast.success('✅ Đã duyệt job thành công');
-      // Remove from neutral list
-      setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+      
+      triggerVisualFeedback(jobId, 'APPROVED', () => {
+        // Remove from neutral list after animation
+        setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+      });
+      
       fetchStats();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Không thể duyệt job');
@@ -78,8 +96,13 @@ const handleApprove = async (jobId) => {
       setLoading(true);
       await adminService.rejectJob(rejectingJobId, rejectionReason.trim());
       toast.success('❌ Đã từ chối job');
-      // Remove from neutral list
-      setNeutralJobs(prev => prev.filter(j => j._id !== rejectingJobId));
+      
+      const jobId = rejectingJobId;
+      triggerVisualFeedback(jobId, 'REJECTED', () => {
+        // Remove from neutral list after animation
+        setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+      });
+      
       setRejectDialogOpen(false);
       setRejectingJobId(null);
       setRejectionReason('');
@@ -360,11 +383,11 @@ const handleApprove = async (jobId) => {
       if (response.data?.success) {
         const { aiResult } = response.data.data;
         
-        // Remove from pending list and refresh
-        setPendingJobs(prev => prev.filter(j => j._id !== job._id));
-        
-        // Remove from neutral list if it was there
-        setNeutralJobs(prev => prev.filter(j => j._id !== job._id));
+        triggerVisualFeedback(job._id, aiResult.shouldApprove ? 'APPROVED' : 'REJECTED', () => {
+          // Remove from list after animation
+          setPendingJobs(prev => prev.filter(j => j._id !== job._id));
+          setNeutralJobs(prev => prev.filter(j => j._id !== job._id));
+        });
         
         fetchStats();
         
@@ -591,7 +614,11 @@ const handleApprove = async (jobId) => {
               {filteredPendingJobs.map((job) => (
                 <div
                   key={job._id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className={cn(
+                    "flex items-start justify-between p-4 border rounded-lg hover:shadow-md transition-all duration-300",
+                    recentActions[job._id] === 'APPROVED' && "animate-moderate-approve ring-2 ring-green-500",
+                    recentActions[job._id] === 'REJECTED' && "animate-moderate-reject ring-2 ring-red-500"
+                  )}
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -648,7 +675,11 @@ const handleApprove = async (jobId) => {
               {neutralJobs.map((job) => (
                 <div
                   key={job._id}
-                  className="flex items-start justify-between p-4 border-2 border-yellow-200 rounded-lg bg-white hover:shadow-md transition-shadow"
+                  className={cn(
+                    "flex items-start justify-between p-4 border-2 border-yellow-200 rounded-lg bg-white hover:shadow-md transition-all duration-300",
+                    recentActions[job._id] === 'APPROVED' && "animate-moderate-approve ring-2 ring-green-500 border-green-500",
+                    recentActions[job._id] === 'REJECTED' && "animate-moderate-reject ring-2 ring-red-500 border-red-500"
+                  )}
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">

@@ -9,7 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJobLLM } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
@@ -68,6 +68,19 @@ export function JobManagement() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingJobId, setRejectingJobId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [recentActions, setRecentActions] = useState({}); // { jobId: 'APPROVED' | 'REJECTED' }
+
+  const triggerVisualFeedback = (jobId, status) => {
+    setRecentActions(prev => ({ ...prev, [jobId]: status }));
+    // Clear the effect after 2 seconds
+    setTimeout(() => {
+      setRecentActions(prev => {
+        const newState = { ...prev };
+        delete newState[jobId];
+        return newState;
+      });
+    }, 2000);
+  };
 
   // Fetch companies for filter dropdown
   useEffect(() => {
@@ -197,6 +210,8 @@ export function JobManagement() {
       setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, status: 'INACTIVE' } : job
       ));
+      
+      triggerVisualFeedback(jobId, 'REJECTED'); // Use red glow for deactivate
       fetchStats();
 
       toast.success('Đã vô hiệu hóa công việc');
@@ -216,6 +231,8 @@ export function JobManagement() {
       setJobs(prev => prev.map(job =>
         job._id === jobId ? { ...job, approved: true, moderationStatus: 'APPROVED', status: 'ACTIVE' } : job
       ));
+      
+      triggerVisualFeedback(jobId, 'APPROVED');
       fetchStats();
 
       toast.success('Đã phê duyệt công việc');
@@ -247,6 +264,7 @@ export function JobManagement() {
         job._id === rejectingJobId ? { ...job, approved: false, moderationStatus: 'REJECTED', status: 'INACTIVE' } : job
       ));
 
+      triggerVisualFeedback(rejectingJobId, 'REJECTED');
       setRejectDialogOpen(false);
       setRejectingJobId(null);
       setRejectionReason('');
@@ -265,30 +283,7 @@ export function JobManagement() {
     handleRejectClick(jobId);
   }, []);
 
-  const handleAIModerateJob = useCallback(async (jobId) => {
-    try {
-      setLoading(true);
-      const response = await aiModerateJobLLM(jobId);
-      
-      if (response.data?.success) {
-        const { job, aiResult } = response.data.data;
-        
-        // Update local state
-        setJobs(prev => prev.map(j =>
-          j._id === jobId ? { ...j, ...job } : j
-        ));
-        
-        fetchStats();
-        
-        const status = aiResult.shouldApprove ? 'phê duyệt' : 'từ chối';
-        toast.success(`AI đã ${status} công việc (độ tin cậy: ${(aiResult.confidence * 100).toFixed(1)}%)`);
-      }
-    } catch (error) {
-      toast.error(error.message || 'Không thể duyệt job bằng AI');
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchStats]);
+
 
   const handleViewJob = (jobId) => {
     setSelectedJobId(jobId);
@@ -500,7 +495,14 @@ export function JobManagement() {
           ) : (
             <div className="space-y-6">
               {jobs.map((job) => (
-                <Card key={job._id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                <Card 
+                  key={job._id} 
+                  className={cn(
+                    "border border-gray-200 hover:shadow-md transition-all duration-300",
+                    recentActions[job._id] === 'APPROVED' && "animate-moderate-approve ring-2 ring-green-500",
+                    recentActions[job._id] === 'REJECTED' && "animate-moderate-reject ring-2 ring-red-500"
+                  )}
+                >
                   <CardContent className="p-8">
                     <div className="flex items-start justify-between gap-10">
                       <div className="flex items-start gap-6 flex-1">
@@ -544,16 +546,7 @@ export function JobManagement() {
                         </Button>
                         {job.moderationStatus === 'PENDING' && (
                           <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAIModerateJob(job._id)}
-                              disabled={loading}
-                              className="whitespace-nowrap px-4 py-2 border-purple-300 text-purple-700 hover:bg-purple-50"
-                            >
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              AI Duyệt
-                            </Button>
+
                             <Button
                               size="sm"
                               variant="destructive"
