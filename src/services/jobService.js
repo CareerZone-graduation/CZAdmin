@@ -60,8 +60,8 @@ export const approveJob = async (jobId) => {
 }
 
 // Reject job (for pending jobs)
-export const rejectJob = async (jobId) => {
-  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, {}, { showToast: true })
+export const rejectJob = async (jobId, rejectionReason) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, { rejectionReason }, { showToast: true })
 }
 
 // Get job statistics for admin
