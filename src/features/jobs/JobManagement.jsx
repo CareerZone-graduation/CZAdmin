@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJobLLM } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
@@ -26,9 +28,12 @@ import {
   ChevronsUpDown,
   Clock,
   AlertCircle,
-  Ban
+  Ban,
+  Sparkles,
+  XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import * as adminService from '@/services/adminService';
 
 export function JobManagement() {
   const [jobs, setJobs] = useState([]);
@@ -58,6 +63,11 @@ export function JobManagement() {
     totalItems: 0,
     limit: 10
   });
+
+  // Rejection dialog state
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingJobId, setRejectingJobId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Fetch companies for filter dropdown
   useEffect(() => {
@@ -216,21 +226,65 @@ export function JobManagement() {
     }
   }, [fetchStats]);
 
-  const handleRejectJob = useCallback(async (jobId) => {
+  const handleRejectClick = (jobId) => {
+    setRejectingJobId(jobId);
+    setRejectionReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = useCallback(async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối');
+      return;
+    }
+
     try {
       setLoading(true);
-      await rejectJob(jobId);
+      await adminService.rejectJob(rejectingJobId, rejectionReason.trim());
 
       // Update local state
       setJobs(prev => prev.map(job =>
-        job._id === jobId ? { ...job, approved: false, moderationStatus: 'REJECTED', status: 'INACTIVE' } : job
+        job._id === rejectingJobId ? { ...job, approved: false, moderationStatus: 'REJECTED', status: 'INACTIVE' } : job
       ));
 
+      setRejectDialogOpen(false);
+      setRejectingJobId(null);
+      setRejectionReason('');
       fetchStats();
 
       toast.success('Đã từ chối công việc');
     } catch (error) {
-      toast.error(error.message || 'Không thể từ chối công việc');
+      toast.error(error.response?.data?.message || 'Không thể từ chối công việc');
+    } finally {
+      setLoading(false);
+    }
+  }, [rejectingJobId, rejectionReason, fetchStats]);
+
+  const handleRejectJob = useCallback(async (jobId) => {
+    // Open dialog instead of direct rejection
+    handleRejectClick(jobId);
+  }, []);
+
+  const handleAIModerateJob = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      const response = await aiModerateJobLLM(jobId);
+      
+      if (response.data?.success) {
+        const { job, aiResult } = response.data.data;
+        
+        // Update local state
+        setJobs(prev => prev.map(j =>
+          j._id === jobId ? { ...j, ...job } : j
+        ));
+        
+        fetchStats();
+        
+        const status = aiResult.shouldApprove ? 'phê duyệt' : 'từ chối';
+        toast.success(`AI đã ${status} công việc (độ tin cậy: ${(aiResult.confidence * 100).toFixed(1)}%)`);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Không thể duyệt job bằng AI');
     } finally {
       setLoading(false);
     }
@@ -492,6 +546,16 @@ export function JobManagement() {
                           <>
                             <Button
                               size="sm"
+                              variant="outline"
+                              onClick={() => handleAIModerateJob(job._id)}
+                              disabled={loading}
+                              className="whitespace-nowrap px-4 py-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              AI Duyệt
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => handleRejectJob(job._id)}
                               disabled={loading}
@@ -555,6 +619,59 @@ export function JobManagement() {
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
       />
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="w-5 h-5" />
+              Từ chối tin tuyển dụng
+            </DialogTitle>
+            <DialogDescription>
+              Vui lòng nhập lý do từ chối để nhà tuyển dụng có thể cải thiện tin đăng của họ.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="rejection-reason" className="text-sm font-medium">
+                Lý do từ chối <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="Ví dụ: Nội dung công việc không rõ ràng, thiếu thông tin về yêu cầu ứng viên..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={5}
+                className="resize-none"
+              />
+              <p className="text-xs text-gray-500">
+                Lý do này sẽ được gửi đến nhà tuyển dụng qua thông báo
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRejectDialogOpen(false);
+                setRejectingJobId(null);
+                setRejectionReason('');
+              }}
+              disabled={loading}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleRejectConfirm}
+              disabled={loading || !rejectionReason.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

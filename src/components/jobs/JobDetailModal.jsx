@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Building2,
   MapPin,
@@ -19,7 +20,8 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getJobDetailForAdmin, approveJob, rejectJob } from '@/services/jobService';
+import { getJobDetailForAdmin, approveJob } from '@/services/jobService';
+import * as adminService from '@/services/adminService';
 import { formatDate } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -62,11 +64,24 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
     }
   };
 
-  const handleReject = async () => {
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const handleRejectClick = () => {
+    setRejectionReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối');
+      return;
+    }
     try {
       setActionLoading(true);
-      await rejectJob(jobId);
+      await adminService.rejectJob(jobId, rejectionReason.trim());
       toast.success('Đã từ chối công việc');
+      setRejectDialogOpen(false);
       fetchJobDetail(); // Refresh data
     } catch (error) {
       toast.error(error.message || 'Không thể từ chối công việc');
@@ -269,6 +284,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
   if (!job) return null;
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -299,7 +315,7 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={handleReject}
+                        onClick={handleRejectClick}
                         disabled={actionLoading}
                       >
                         <XCircle className="w-4 h-4 mr-2" />
@@ -501,6 +517,58 @@ const JobDetailModal = ({ jobId, isOpen, onClose }) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <XCircle className="w-5 h-5" />
+            Từ chối tin tuyển dụng
+          </DialogTitle>
+          <DialogDescription>
+            Vui lòng nhập lý do từ chối để nhà tuyển dụng có thể cải thiện tin đăng của họ.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label htmlFor="modal-rejection-reason" className="text-sm font-medium">
+              Lý do từ chối <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              id="modal-rejection-reason"
+              placeholder="Ví dụ: Nội dung công việc không rõ ràng, thiếu thông tin về yêu cầu ứng viên..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={5}
+              className="resize-none"
+            />
+            <p className="text-xs text-gray-500">
+              Lý do này sẽ được gửi đến nhà tuyển dụng qua thông báo
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setRejectDialogOpen(false);
+              setRejectionReason('');
+            }}
+            disabled={actionLoading}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleRejectConfirm}
+            disabled={actionLoading || !rejectionReason.trim()}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            {actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

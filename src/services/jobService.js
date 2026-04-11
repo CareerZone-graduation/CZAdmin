@@ -60,11 +60,26 @@ export const approveJob = async (jobId) => {
 }
 
 // Reject job (for pending jobs)
-export const rejectJob = async (jobId) => {
-  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, {}, { showToast: true })
+export const rejectJob = async (jobId, rejectionReason) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/reject`, { rejectionReason }, { showToast: true })
 }
 
 // Get job statistics for admin
 export const getJobStatistics = async () => {
   return await apiClient.get('/admin/jobs/stats')
+}
+
+// AI Auto Moderate Job
+export const aiModerateJob = async (jobId) => {
+  return await apiClient.post(`/admin/jobs/${jobId}/ai-moderate`, {}, { showToast: true })
+}
+
+// AI Auto Moderate Job with LLM (more accurate with detailed reasons)
+export const aiModerateJobLLM = async (jobId) => {
+  return await apiClient.post(`/admin/jobs/${jobId}/ai-moderate-llm`, {}, { showToast: false })
+}
+
+// Reset job to PENDING status (undo AI moderation)
+export const resetJobToPending = async (jobId) => {
+  return await apiClient.patch(`/admin/jobs/${jobId}/status`, { status: 'PENDING' }, { showToast: true })
 }
