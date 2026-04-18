@@ -9,10 +9,11 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics } from '@/services/jobService';
+import { getAllJobsForAdmin, updateJobStatus, activateJob, deactivateJob, approveJob, rejectJob, getJobStatistics, aiModerateJobLLM } from '@/services/jobService';
 import { getAllCompaniesForAdmin } from '@/services/companyService';
 import { JobListSkeleton } from '@/components/common/JobListSkeleton';
 import JobDetailModal from '@/components/jobs/JobDetailModal';
+import { JobRejectionDialog } from '@/components/jobs/JobRejectionDialog';
 import { Pagination } from '@/components/common/Pagination';
 import {
   Search,
@@ -243,6 +244,34 @@ export function JobManagement() {
     }
   }, [fetchStats]);
 
+  const handleRetryAI = useCallback(async (jobId) => {
+    try {
+      setLoading(true);
+      const response = await aiModerateJobLLM(jobId);
+
+      if (response.data?.success) {
+        const { aiResult, job: updatedJob } = response.data.data;
+        
+        triggerVisualFeedback(jobId, aiResult.shouldApprove ? 'APPROVED' : 'REJECTED');
+        
+        // Remove or update from list
+        setJobs(prev => prev.map(j => j._id === jobId ? { ...j, ...updatedJob } : j));
+        fetchStats();
+
+        if (aiResult.shouldApprove) {
+          toast.success(`✅ AI đã phê duyệt thành công`);
+        } else {
+          toast.warning(`❌ AI đã từ chối job này`);
+        }
+      }
+    } catch (error) {
+      toast.error('AI vẫn đang gặp lỗi: ' + (error.message || 'Server error'));
+      // Keep it in list, status remains PENDING with failed=true
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchStats]);
+
   const handleRejectClick = (jobId) => {
     setRejectingJobId(jobId);
     setRejectionReason('');
@@ -257,7 +286,7 @@ export function JobManagement() {
 
     try {
       setLoading(true);
-      await adminService.rejectJob(rejectingJobId, rejectionReason.trim());
+      await rejectJob(rejectingJobId, rejectionReason.trim());
 
       // Update local state
       setJobs(prev => prev.map(job =>
@@ -299,6 +328,9 @@ export function JobManagement() {
     const { status, moderationStatus } = job;
 
     if (moderationStatus === 'PENDING') {
+      if (job.aiModerationResult?.failed || job.aiModerationResult?.prediction === 2) {
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Chờ duyệt (Lỗi AI)</Badge>;
+      }
       return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Chờ duyệt</Badge>;
     }
     if (moderationStatus === 'REJECTED') {
@@ -464,6 +496,7 @@ export function JobManagement() {
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="PENDING">Chờ duyệt</SelectItem>
+                <SelectItem value="AI_FAILED">Lỗi duyệt tự động (Cần duyệt tay)</SelectItem>
                 <SelectItem value="ACTIVE">Đang tuyển</SelectItem>
                 <SelectItem value="INACTIVE">Ngừng tuyển dụng</SelectItem>
                 <SelectItem value="EXPIRED">Hết hạn ứng tuyển</SelectItem>
@@ -546,6 +579,18 @@ export function JobManagement() {
                         </Button>
                         {job.moderationStatus === 'PENDING' && (
                           <>
+                            {(job.aiModerationResult?.failed || job.aiModerationResult?.prediction === 2) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRetryAI(job._id)}
+                                disabled={loading}
+                                className="whitespace-nowrap px-4 py-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+                              >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Thử lại AI
+                              </Button>
+                            )}
 
                             <Button
                               size="sm"
@@ -614,57 +659,19 @@ export function JobManagement() {
       />
 
       {/* Rejection Reason Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <XCircle className="w-5 h-5" />
-              Từ chối tin tuyển dụng
-            </DialogTitle>
-            <DialogDescription>
-              Vui lòng nhập lý do từ chối để nhà tuyển dụng có thể cải thiện tin đăng của họ.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="rejection-reason" className="text-sm font-medium">
-                Lý do từ chối <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                id="rejection-reason"
-                placeholder="Ví dụ: Nội dung công việc không rõ ràng, thiếu thông tin về yêu cầu ứng viên..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={5}
-                className="resize-none"
-              />
-              <p className="text-xs text-gray-500">
-                Lý do này sẽ được gửi đến nhà tuyển dụng qua thông báo
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectingJobId(null);
-                setRejectionReason('');
-              }}
-              disabled={loading}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleRejectConfirm}
-              disabled={loading || !rejectionReason.trim()}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {loading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <JobRejectionDialog
+        isOpen={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        rejectionReason={rejectionReason}
+        onReasonChange={setRejectionReason}
+        onConfirm={handleRejectConfirm}
+        onCancel={() => {
+          setRejectDialogOpen(false);
+          setRejectingJobId(null);
+          setRejectionReason('');
+        }}
+        loading={loading}
+      />
     </div>
   );
 }

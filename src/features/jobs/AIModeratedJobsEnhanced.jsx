@@ -94,8 +94,9 @@ export function AIModeratedJobs() {
 
       if (searchTerm) queryParams.search = searchTerm;
 
+      // Only filter by moderationStatus, not status
+      // This ensures we get all AI-moderated jobs regardless of their current status
       if (statusFilter === 'approved') {
-        queryParams.status = 'ACTIVE';
         queryParams.moderationStatus = 'APPROVED';
       } else if (statusFilter === 'rejected') {
         queryParams.moderationStatus = 'REJECTED';
@@ -318,7 +319,9 @@ export function AIModeratedJobs() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-700">Tổng số job AI duyệt</p>
-                <p className="text-3xl font-bold text-blue-900 mt-2">{jobs.length}</p>
+                <p className="text-3xl font-bold text-blue-900 mt-2">
+                  {(stats.aiApproved || 0) + (stats.aiRejected || 0)}
+                </p>
               </div>
               <Bot className="w-12 h-12 text-blue-400" />
             </div>
@@ -331,7 +334,7 @@ export function AIModeratedJobs() {
               <div>
                 <p className="text-sm font-medium text-green-700">Đã phê duyệt</p>
                 <p className="text-3xl font-bold text-green-900 mt-2">
-                  {jobs.filter(j => j.moderationStatus === 'APPROVED').length}
+                  {stats.aiApproved || 0}
                 </p>
               </div>
               <CheckCircle className="w-12 h-12 text-green-400" />
@@ -345,7 +348,7 @@ export function AIModeratedJobs() {
               <div>
                 <p className="text-sm font-medium text-red-700">Đã từ chối</p>
                 <p className="text-3xl font-bold text-red-900 mt-2">
-                  {jobs.filter(j => j.moderationStatus === 'REJECTED').length}
+                  {stats.aiRejected || 0}
                 </p>
               </div>
               <XCircle className="w-12 h-12 text-red-400" />

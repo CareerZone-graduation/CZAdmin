@@ -7,16 +7,17 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { getAllJobsForAdmin, aiModerateJobLLM, getJobStatistics, resetJobToPending } from '@/services/jobService';
+import { getAllJobsForAdmin, aiModerateJobLLM, getJobStatistics, resetJobToPending, approveJob, rejectJob } from '@/services/jobService';
 import * as adminService from '@/services/adminService';
 import { Sparkles, CheckCircle, XCircle, Clock, Zap, TrendingUp, AlertTriangle, Building2, Calendar, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIResultDetailModal } from '@/components/jobs/AIResultDetailModal';
+import { JobRejectionDialog } from '@/components/jobs/JobRejectionDialog';
 
 export function AIJobModeration() {
   const [pendingJobs, setPendingJobs] = useState([]);
   const [filteredPendingJobs, setFilteredPendingJobs] = useState([]);
-  const [neutralJobs, setNeutralJobs] = useState([]);
+  const [failedJobs, setFailedJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
@@ -61,17 +62,17 @@ export function AIJobModeration() {
     };
     loadStatus();
   }, []);
-const handleApprove = async (jobId) => {
+  const handleApprove = async (jobId) => {
     try {
       setLoading(true);
-      await adminService.approveJob(jobId);
+      await approveJob(jobId);
       toast.success('✅ Đã duyệt job thành công');
-      
+
       triggerVisualFeedback(jobId, 'APPROVED', () => {
-        // Remove from neutral list after animation
-        setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+        // Remove from failed list after animation
+        setFailedJobs(prev => prev.filter(j => j._id !== jobId));
       });
-      
+
       fetchStats();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Không thể duyệt job');
@@ -94,15 +95,15 @@ const handleApprove = async (jobId) => {
 
     try {
       setLoading(true);
-      await adminService.rejectJob(rejectingJobId, rejectionReason.trim());
+      await rejectJob(rejectingJobId, rejectionReason.trim());
       toast.success('❌ Đã từ chối job');
-      
+
       const jobId = rejectingJobId;
       triggerVisualFeedback(jobId, 'REJECTED', () => {
-        // Remove from neutral list after animation
-        setNeutralJobs(prev => prev.filter(j => j._id !== jobId));
+        // Remove from failed list after animation
+        setFailedJobs(prev => prev.filter(j => j._id !== jobId));
       });
-      
+
       setRejectDialogOpen(false);
       setRejectingJobId(null);
       setRejectionReason('');
@@ -137,7 +138,7 @@ const handleApprove = async (jobId) => {
       isRunning = true;
       hasModeratedThisBatch = true; // Đánh dấu đã moderate batch này
       console.log('🤖 Auto-moderation is ON, moderating pending jobs...');
-      
+
       try {
         // Chỉ hiển thị toast lần đầu tiên, các lần sau chạy im lặng
         await handleModerateAll(!isFirstRun);
@@ -165,10 +166,10 @@ const handleApprove = async (jobId) => {
     try {
       setToggleLoading(true);
       const response = await adminService.setAutoModerationStatus(enabled);
-      
+
       if (response.data?.success) {
         setAutoModerationEnabled(enabled);
-        
+
         if (!enabled) {
           toast.success('⏸️ Đã tắt tự động duyệt');
         }
@@ -187,9 +188,9 @@ const handleApprove = async (jobId) => {
       setLoading(true);
       const response = await getAllJobsForAdmin({ status: 'PENDING', limit: 100 });
       if (response.data?.success) {
-        // Lọc bỏ các job có moderationStatus = 'NEUTRAL' (đã thất bại trước đó)
+        // Lọc bỏ các job đã thất bại AI (aiModerationResult.failed === true)
         const validPendingJobs = (response.data.data || []).filter(
-          job => job.moderationStatus !== 'NEUTRAL'
+          job => !job.aiModerationResult?.failed
         );
         setPendingJobs(validPendingJobs);
         setFilteredPendingJobs(validPendingJobs);
@@ -232,15 +233,15 @@ const handleApprove = async (jobId) => {
     setFilteredPendingJobs(filtered);
   }, [pendingJobs, searchTerm, sortBy]);
 
-  const fetchNeutralJobs = useCallback(async () => {
+  const fetchFailedJobs = useCallback(async () => {
     try {
-      const response = await getAllJobsForAdmin({ status: 'NEUTRAL', limit: 100 });
+      const response = await getAllJobsForAdmin({ status: 'AI_FAILED', limit: 100 });
       if (response.data?.success) {
         return response.data.data || [];
       }
       return [];
     } catch (error) {
-      console.error('Failed to fetch neutral jobs:', error);
+      console.error('Failed to fetch AI failed jobs:', error);
       return [];
     }
   }, []);
@@ -259,19 +260,19 @@ const handleApprove = async (jobId) => {
   useEffect(() => {
     fetchPendingJobs();
     fetchStats();
-    
-    // Load neutral jobs
-    fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+
+    // Load failed jobs
+    fetchFailedJobs().then(jobs => setFailedJobs(jobs));
 
     // Auto-refresh mỗi 10 giây để cập nhật job mới
     const refreshInterval = setInterval(() => {
       fetchPendingJobs();
       fetchStats();
-      fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+      fetchFailedJobs().then(jobs => setFailedJobs(jobs));
     }, 10000); // 10 seconds
 
     return () => clearInterval(refreshInterval);
-  }, [fetchPendingJobs, fetchStats, fetchNeutralJobs]);
+  }, [fetchPendingJobs, fetchStats, fetchFailedJobs]);
 
   const handleModerateAll = async (silent = false) => {
     if (pendingJobs.length === 0) {
@@ -288,7 +289,7 @@ const handleApprove = async (jobId) => {
     let failedCount = 0;
     let approvedCount = 0;
     let rejectedCount = 0;
-    
+
     // Lưu số lượng job ban đầu để tránh bị thay đổi khi fetch
     const totalJobs = pendingJobs.length;
 
@@ -298,19 +299,19 @@ const handleApprove = async (jobId) => {
 
       try {
         const response = await aiModerateJobLLM(job._id);
-        
+
         console.log('AI Moderation Response:', response); // Debug log
-        
+
         if (response.data?.success) {
           const { aiResult } = response.data.data;
-          
+
           if (!aiResult) {
             console.error('aiResult is undefined for job:', job._id);
             throw new Error('AI result is missing');
           }
-          
+
           const isApproved = aiResult.shouldApprove;
-          
+
           moderationResults.push({
             jobId: job._id,
             jobTitle: job.title,
@@ -327,7 +328,7 @@ const handleApprove = async (jobId) => {
             summary: aiResult.summary || '',
             method: aiResult.method || 'LLM'
           });
-          
+
           successCount++;
           if (isApproved) {
             approvedCount++;
@@ -336,19 +337,19 @@ const handleApprove = async (jobId) => {
           }
         }
       } catch (error) {
-        // Job thất bại sẽ được đánh dấu NEUTRAL và bỏ qua
+        // Job thất bại sẽ được đánh dấu failed và bỏ qua
         console.error(`❌ Error moderating job "${job.title}":`, error);
         console.error('Error details:', {
           message: error.message,
           response: error.response?.data,
           status: error.response?.status
         });
-        
+
         moderationResults.push({
           jobId: job._id,
           jobTitle: job.title,
           success: false,
-          neutral: true, // Đánh dấu là NEUTRAL
+          failed: true, // Đánh dấu là failed
           error: error.message || 'Unknown error'
         });
         failedCount++;
@@ -361,17 +362,17 @@ const handleApprove = async (jobId) => {
     setResults(moderationResults);
     setProcessing(false);
     setCurrentJobIndex(0); // Reset về 0
-    
+
     // Hiển thị thông báo đơn giản (chỉ khi không phải auto-moderate)
     if (!silent && totalJobs > 0) {
       toast.success(`✅ AI đã xem xét thành công ${totalJobs} job`);
     }
-    
+
     // Refresh data silently - wait for backend to update
     setTimeout(() => {
       fetchPendingJobs();
       fetchStats();
-      fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+      fetchFailedJobs().then(jobs => setFailedJobs(jobs));
     }, 1500);
   };
 
@@ -379,18 +380,18 @@ const handleApprove = async (jobId) => {
     try {
       setLoading(true);
       const response = await aiModerateJobLLM(job._id);
-      
+
       if (response.data?.success) {
         const { aiResult } = response.data.data;
-        
+
         triggerVisualFeedback(job._id, aiResult.shouldApprove ? 'APPROVED' : 'REJECTED', () => {
           // Remove from list after animation
           setPendingJobs(prev => prev.filter(j => j._id !== job._id));
-          setNeutralJobs(prev => prev.filter(j => j._id !== job._id));
+          setFailedJobs(prev => prev.filter(j => j._id !== job._id));
         });
-        
+
         fetchStats();
-        
+
         // Show success message
         if (aiResult.shouldApprove) {
           toast.success(`✅ Đã phê duyệt: ${job.title}`);
@@ -400,9 +401,9 @@ const handleApprove = async (jobId) => {
       }
     } catch (error) {
       toast.error(error.message || 'Không thể duyệt job');
-      
-      // Refresh neutral jobs to show the failed job
-      fetchNeutralJobs().then(jobs => setNeutralJobs(jobs));
+
+      // Refresh failed jobs to show the failed job
+      fetchFailedJobs().then(jobs => setFailedJobs(jobs));
     } finally {
       setLoading(false);
     }
@@ -411,18 +412,18 @@ const handleApprove = async (jobId) => {
   const handleUndoDecision = async (jobId, wasApproved) => {
     try {
       setLoading(true);
-      
+
       // Hoàn tác: Đưa job về trạng thái PENDING (chờ duyệt)
       await resetJobToPending(jobId);
-      
+
       toast.success('Đã hoàn tác: Job được đưa về trạng thái chờ duyệt');
-      
+
       // Remove from results và add back to pending list
       setResults(prev => prev.filter(r => r.jobId !== jobId));
-      
+
       // Refresh pending jobs
       fetchPendingJobs();
-      
+
       setIsDetailModalOpen(false);
       fetchStats();
     } catch (error) {
@@ -432,8 +433,8 @@ const handleApprove = async (jobId) => {
     }
   };
 
-  const progress = pendingJobs.length > 0 && currentJobIndex > 0 
-    ? (currentJobIndex / pendingJobs.length) * 100 
+  const progress = pendingJobs.length > 0 && currentJobIndex > 0
+    ? (currentJobIndex / pendingJobs.length) * 100
     : 0;
 
   return (
@@ -464,41 +465,41 @@ const handleApprove = async (jobId) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-700">Không xác định</p>
-                <p className="text-3xl font-bold text-yellow-900 mt-2">{stats.neutral || 0}</p>
+                <p className="text-sm font-medium text-yellow-700">Job lỗi khi duyệt tự động</p>
+                <p className="text-3xl font-bold text-yellow-900 mt-2">{failedJobs.length || 0}</p>
               </div>
               <AlertTriangle className="w-12 h-12 text-yellow-400" />
             </div>
           </CardContent>
         </Card>
-         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-700">AI đã duyệt</p>
-                        <p className="text-3xl font-bold text-green-900 mt-2">
-                          {stats.aiApproved -1 || 0}
-                        </p>
-                      </div>
-                      <CheckCircle className="w-12 h-12 text-green-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-        
-                <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-red-700">AI đã từ chối</p>
-                        <p className="text-3xl font-bold text-red-900 mt-2">
-                          {stats.aiRejected-1 || 0}
-                        </p>
-                      </div>
-                      <XCircle className="w-12 h-12 text-red-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-       
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-700">AI đã duyệt</p>
+                <p className="text-3xl font-bold text-green-900 mt-2">
+                  {stats.aiApproved || 0}
+                </p>
+              </div>
+              <CheckCircle className="w-12 h-12 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-red-700">AI đã từ chối</p>
+                <p className="text-3xl font-bold text-red-900 mt-2">
+                  {stats.aiRejected || 0}
+                </p>
+              </div>
+              <XCircle className="w-12 h-12 text-red-400" />
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
 
       {/* Auto Moderation Control */}
@@ -534,8 +535,8 @@ const handleApprove = async (jobId) => {
                   <div>
                     <p className="font-bold text-lg text-gray-900">Tự động duyệt bằng AI</p>
                     <p className="text-sm text-gray-600">
-                      {autoModerationEnabled 
-                        ? '✅ Đang hoạt động - Tự động duyệt tất cả job chưa duyệt' 
+                      {autoModerationEnabled
+                        ? '✅ Đang hoạt động - Tự động duyệt tất cả job chưa duyệt'
                         : '⏸️ Đã tắt - Job cần duyệt thủ công'}
                     </p>
                   </div>
@@ -547,7 +548,7 @@ const handleApprove = async (jobId) => {
                   className="scale-125"
                 />
               </div>
-              
+
               <div className="flex items-center justify-between pt-4 border-t border-purple-200">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${autoModerationEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
@@ -566,7 +567,7 @@ const handleApprove = async (jobId) => {
         </CardContent>
       </Card>
 
-   
+
 
       {/* Pending Jobs List */}
       <Card>
@@ -658,13 +659,13 @@ const handleApprove = async (jobId) => {
         </CardContent>
       </Card>
 
-      {/* Neutral Jobs List - Jobs that failed AI moderation */}
-      {neutralJobs.length > 0 && (
+      {/* Failed Jobs List - Jobs that failed AI moderation */}
+      {failedJobs.length > 0 && (
         <Card className="border-2 border-yellow-200 bg-yellow-50/30">
           <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50">
             <CardTitle className="flex items-center gap-2 text-yellow-900">
               <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              Job Không Xác Định ({neutralJobs.length})
+              Job lỗi khi duyệt tự động ({failedJobs.length})
             </CardTitle>
             <CardDescription className="text-yellow-700">
               Các job này không thể được AI phân tích tự động. Click "Thử Lại" để duyệt thủ công.
@@ -672,7 +673,7 @@ const handleApprove = async (jobId) => {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {neutralJobs.map((job) => (
+              {failedJobs.map((job) => (
                 <div
                   key={job._id}
                   className={cn(
@@ -707,7 +708,7 @@ const handleApprove = async (jobId) => {
                         <Calendar className="w-3 h-3" />
                         <span>Đăng ngày {new Date(job.createdAt).toLocaleDateString('vi-VN')}</span>
                       </div>
-                      
+
                       {/* Error Reason */}
                       {job.aiModerationResult?.summary && (
                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -732,23 +733,33 @@ const handleApprove = async (jobId) => {
                       )}
                     </div>
                   </div>
-                  <Button
-                    onClick={() => handleApprove(job._id)}
-                    disabled={loading || processing}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Chấp nhận
-                  </Button>
-                 
-                   <Button
-                    onClick={() => handleReject(job._id)}
-                    disabled={loading || processing}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Từ chối
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleModerateSingle(job)}
+                      disabled={loading || processing}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Thử Lại AI
+                    </Button>
+                    <Button
+                      onClick={() => handleApprove(job._id)}
+                      disabled={loading || processing}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Duyệt
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectClick(job._id)}
+                      disabled={loading || processing}
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Từ chối
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -768,57 +779,20 @@ const handleApprove = async (jobId) => {
       />
 
       {/* Rejection Reason Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <XCircle className="w-5 h-5" />
-              Từ chối tin tuyển dụng
-            </DialogTitle>
-            <DialogDescription>
-              Vui lòng nhập lý do từ chối để nhà tuyển dụng có thể cải thiện tin đăng của họ.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="rejection-reason" className="text-sm font-medium">
-                Lý do từ chối <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                id="rejection-reason"
-                placeholder="Ví dụ: Nội dung công việc không rõ ràng, thiếu thông tin về yêu cầu ứng viên..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={5}
-                className="resize-none"
-              />
-              <p className="text-xs text-gray-500">
-                Lý do này sẽ được gửi đến nhà tuyển dụng qua thông báo
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectingJobId(null);
-                setRejectionReason('');
-              }}
-              disabled={loading}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleRejectConfirm}
-              disabled={loading || !rejectionReason.trim()}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {loading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <JobRejectionDialog
+        isOpen={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        rejectionReason={rejectionReason}
+        onReasonChange={setRejectionReason}
+        onConfirm={handleRejectConfirm}
+        onCancel={() => {
+          setRejectDialogOpen(false);
+          setRejectingJobId(null);
+          setRejectionReason('');
+        }}
+        loading={loading}
+      />
+
     </div>
   );
 }
