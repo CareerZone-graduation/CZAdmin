@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { logoutUser } from '@/features/auth/authSlice';
 import { getAllSupportRequests } from '@/services/supportRequestService';
+import { getJobStatistics } from '@/services/jobService';
 
 const menuItems = [
   {
@@ -47,7 +48,8 @@ const menuItems = [
     label: 'Việc làm',
     description: 'Quản lý tin tuyển dụng',
     icon: Briefcase,
-    path: '/jobs'
+    path: '/jobs',
+    badgeKey: 'neutralJobs'
   },
   {
     id: 'transactions',
@@ -71,6 +73,7 @@ export function Sidebar({ className }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [neutralJobsCount, setNeutralJobsCount] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Fetch pending support requests count - only on initial mount
@@ -92,8 +95,20 @@ export function Sidebar({ className }) {
       }
     };
 
+    const fetchNeutralJobsCount = async () => {
+      try {
+        const response = await getJobStatistics();
+        if (isMounted && response?.data?.data?.neutral !== undefined) {
+          setNeutralJobsCount(response.data.data.neutral);
+        }
+      } catch (error) {
+        console.error('Failed to fetch neutral jobs count:', error);
+      }
+    };
+
     // Only fetch once on mount
     fetchPendingCount();
+    fetchNeutralJobsCount();
 
     return () => {
       isMounted = false;
@@ -117,6 +132,9 @@ export function Sidebar({ className }) {
   const getBadgeValue = (item) => {
     if (item.badgeKey === 'pendingSupport') {
       return unreadCount > 0 ? unreadCount : null;
+    }
+    if (item.badgeKey === 'neutralJobs') {
+      return neutralJobsCount > 0 ? neutralJobsCount : null;
     }
     return item.badge;
   };

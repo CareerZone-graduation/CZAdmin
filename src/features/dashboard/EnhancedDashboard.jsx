@@ -76,8 +76,8 @@ export function EnhancedDashboard() {
       {/* Main Content Based on Active Tab */}
       {activeTab === 'overview' && (
         <>
-          {/* Enhanced Stats Grid - 4 cards in a row like the design */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Enhanced Stats Grid - 3 cards per row (2 rows) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <EnhancedStatsCards />
           </div>
 
