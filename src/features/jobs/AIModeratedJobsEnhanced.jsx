@@ -11,6 +11,7 @@ import { CheckCircle, XCircle, Building2, Calendar, Info, RotateCcw, Bot, Search
 import { cn } from '@/lib/utils';
 import { AIResultDetailModal } from '@/components/jobs/AIResultDetailModal';
 import { Pagination } from '@/components/common/Pagination';
+import ConfirmationDialog from '@/components/common/ConfirmationDialog';
 
 export function AIModeratedJobs() {
   const [jobs, setJobs] = useState([]);
@@ -24,6 +25,11 @@ export function AIModeratedJobs() {
   const [dateFilter, setDateFilter] = useState('all');
   const [customDate, setCustomDate] = useState('');
   const [showCustomDateInput, setShowCustomDateInput] = useState(false);
+  const [undoConfirm, setUndoConfirm] = useState({
+    open: false,
+    jobIds: [],
+    fromDetail: false,
+  });
   const [meta, setMeta] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -165,19 +171,23 @@ export function AIModeratedJobs() {
     }
   };
 
-  const handleBulkUndo = async (jobIds) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn hoàn tác ${jobIds.length} job?\nCác job sẽ được đưa về trạng thái chờ duyệt.`
-    );
+  const handleBulkUndo = (jobIds) => {
+    if (!jobIds?.length) return;
+    setUndoConfirm({
+      open: true,
+      jobIds,
+      fromDetail: false,
+    });
+  };
 
-    if (!confirmed) return;
-
+  const confirmUndo = async () => {
+    if (!undoConfirm.jobIds.length) return;
     try {
       setLoading(true);
       let successCount = 0;
       let failCount = 0;
 
-      for (const jobId of jobIds) {
+      for (const jobId of undoConfirm.jobIds) {
         try {
           await resetJobToPending(jobId);
           successCount++;
@@ -186,13 +196,26 @@ export function AIModeratedJobs() {
         }
       }
 
-      toast.success(`✅ Đã hoàn tác ${successCount} job${failCount > 0 ? `, ${failCount} job lỗi` : ''}`);
+      if (undoConfirm.jobIds.length === 1) {
+        if (successCount === 1) {
+          toast.success('Đã hoàn tác: Job được đưa về trạng thái chờ duyệt');
+        } else {
+          toast.error('Không thể hoàn tác quyết định');
+        }
+      } else {
+        toast.success(`✅ Đã hoàn tác ${successCount} job${failCount > 0 ? `, ${failCount} job lỗi` : ''}`);
+      }
       
       // Refresh list
       await fetchAIModeratedJobs();
+      if (undoConfirm.fromDetail) {
+        setIsDetailModalOpen(false);
+        setSelectedJob(null);
+      }
       fetchStats();
+      setUndoConfirm({ open: false, jobIds: [], fromDetail: false });
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi hoàn tác');
+      toast.error(undoConfirm.jobIds.length === 1 ? 'Không thể hoàn tác quyết định' : 'Có lỗi xảy ra khi hoàn tác');
     } finally {
       setLoading(false);
     }
@@ -237,7 +260,7 @@ export function AIModeratedJobs() {
       return;
     }
 
-    await handleBulkUndo(jobsInRange.map(j => j._id));
+    handleBulkUndo(jobsInRange.map(j => j._id));
   };
 
   const handleViewDetail = (job) => {
@@ -261,25 +284,12 @@ export function AIModeratedJobs() {
     setIsDetailModalOpen(true);
   };
 
-  const handleUndoDecision = async (jobId) => {
-    const confirmed = window.confirm('Bạn có chắc muốn hoàn tác job này?\nJob sẽ được đưa về trạng thái chờ duyệt.');
-    if (!confirmed) return;
-
-    try {
-      setLoading(true);
-      await resetJobToPending(jobId);
-      
-      toast.success('Đã hoàn tác: Job được đưa về trạng thái chờ duyệt');
-      
-      // Refresh list
-      await fetchAIModeratedJobs();
-      setIsDetailModalOpen(false);
-      fetchStats();
-    } catch (error) {
-      toast.error('Không thể hoàn tác quyết định');
-    } finally {
-      setLoading(false);
-    }
+  const handleUndoDecision = (jobId) => {
+    setUndoConfirm({
+      open: true,
+      jobIds: [jobId],
+      fromDetail: true,
+    });
   };
 
   const getStatusBadge = (job) => {
@@ -594,6 +604,26 @@ export function AIModeratedJobs() {
       </Card>
 
       {/* Detail Modal */}
+      <ConfirmationDialog
+        open={undoConfirm.open}
+        onOpenChange={(open) => {
+          if (!open && !loading) {
+            setUndoConfirm({ open: false, jobIds: [], fromDetail: false });
+          }
+        }}
+        title={undoConfirm.jobIds.length === 1 ? 'Hoàn tác job này?' : `Hoàn tác ${undoConfirm.jobIds.length} job?`}
+        description={
+          undoConfirm.jobIds.length === 1
+            ? 'Job sẽ được đưa về trạng thái chờ duyệt.'
+            : 'Các job đã chọn sẽ được đưa về trạng thái chờ duyệt.'
+        }
+        onConfirm={confirmUndo}
+        confirmText="Hoàn tác"
+        cancelText="Hủy"
+        variant="destructive"
+        isLoading={loading}
+      />
+
       <AIResultDetailModal
         result={selectedJob}
         isOpen={isDetailModalOpen}
