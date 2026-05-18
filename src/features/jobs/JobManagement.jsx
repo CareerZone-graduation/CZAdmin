@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,17 @@ export function JobManagement() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [companySearchOpen, setCompanySearchOpen] = useState(false);
+  const [companySearchInput, setCompanySearchInput] = useState('');
+  const [companyQuery, setCompanyQuery] = useState('');
+  const [companyMeta, setCompanyMeta] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 20
+  });
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companyLoadingMore, setCompanyLoadingMore] = useState(false);
+  const companyRequestIdRef = useRef(0);
   const [stats, setStats] = useState({
     active: 0,
     pending: 0,
@@ -83,26 +94,92 @@ export function JobManagement() {
     }, 2000);
   };
 
-  // Fetch companies for filter dropdown
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const response = await getAllCompaniesForAdmin({ limit: 1000 });
-        if (response.data?.success) {
-          const companyList = response.data.data
-            .filter(item => item.company && item.company.name)
-            .map(item => ({
-              id: item._id,
-              name: item.company.name
-            }));
-          setCompanies(companyList);
+  const fetchCompanies = useCallback(async ({ page = 1, search = '', append = false } = {}) => {
+    const requestId = ++companyRequestIdRef.current;
+
+    if (append) {
+      setCompanyLoadingMore(true);
+    } else {
+      setCompanyLoading(true);
+    }
+
+    try {
+      const response = await getAllCompaniesForAdmin({
+        page,
+        limit: companyMeta.limit,
+        sort: 'name_asc',
+        status: 'approved',
+        search: search.trim() || undefined
+      });
+
+      if (requestId !== companyRequestIdRef.current) return;
+
+      if (response.data?.success) {
+        const companyList = response.data.data
+          .filter((item) => item.company && item.company.name)
+          .map((item) => ({
+            id: item._id,
+            name: item.company.name
+          }));
+
+        setCompanies((prev) => {
+          if (!append) return companyList;
+          const existingIds = new Set(prev.map((company) => company.id));
+          const newItems = companyList.filter((company) => !existingIds.has(company.id));
+          return [...prev, ...newItems];
+        });
+
+        if (response.data?.meta) {
+          setCompanyMeta(response.data.meta);
         }
-      } catch (error) {
-        console.error('Failed to fetch companies:', error);
       }
-    };
-    fetchCompanies();
-  }, []);
+    } catch (error) {
+      console.error('Failed to fetch companies:', error);
+    } finally {
+      if (requestId === companyRequestIdRef.current) {
+        setCompanyLoading(false);
+        setCompanyLoadingMore(false);
+      }
+    }
+  }, [companyMeta.limit]);
+
+  useEffect(() => {
+    if (!companySearchOpen) return;
+
+    const debounceId = setTimeout(() => {
+      setCompanyQuery(companySearchInput.trim());
+    }, 300);
+
+    return () => clearTimeout(debounceId);
+  }, [companySearchInput, companySearchOpen]);
+
+  useEffect(() => {
+    if (!companySearchOpen) return;
+    fetchCompanies({ page: 1, search: companyQuery, append: false });
+  }, [companyQuery, companySearchOpen, fetchCompanies]);
+
+  useEffect(() => {
+    if (!companySearchOpen) {
+      setCompanySearchInput('');
+      setCompanyQuery('');
+    }
+  }, [companySearchOpen]);
+
+  const hasMoreCompanies = companyMeta.currentPage < companyMeta.totalPages;
+
+  const handleCompanyListScroll = (event) => {
+    if (companyLoading || companyLoadingMore || !hasMoreCompanies) return;
+
+    const target = event.currentTarget;
+    const remaining = target.scrollHeight - target.scrollTop - target.clientHeight;
+    if (remaining <= 24) {
+      fetchCompanies({
+        page: companyMeta.currentPage + 1,
+        search: companyQuery,
+        append: true
+      });
+    }
+  };
 
   // Fetch job stats
   const fetchStats = useCallback(async () => {
@@ -445,10 +522,14 @@ export function JobManagement() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[300px] p-0">
-                <Command>
-                  <CommandInput placeholder="Tìm công ty..." />
-                  <CommandList>
-                    <CommandEmpty>Không tìm thấy công ty.</CommandEmpty>
+                <Command shouldFilter={false}>
+                  <CommandInput
+                    placeholder="Tìm công ty..."
+                    value={companySearchInput}
+                    onValueChange={setCompanySearchInput}
+                  />
+                  <CommandList onScroll={handleCompanyListScroll}>
+                    {!companyLoading && <CommandEmpty>Không tìm thấy công ty.</CommandEmpty>}
                     <CommandGroup>
                       <CommandItem
                         value="all"
@@ -485,6 +566,12 @@ export function JobManagement() {
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                    {companyLoading && (
+                      <div className="px-3 py-2 text-sm text-gray-500">Đang tải công ty...</div>
+                    )}
+                    {companyLoadingMore && (
+                      <div className="px-3 py-2 text-sm text-gray-500">Đang tải thêm...</div>
+                    )}
                   </CommandList>
                 </Command>
               </PopoverContent>

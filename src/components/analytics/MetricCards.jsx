@@ -1,4 +1,4 @@
-﻿// MetricCards.jsx - Updated with Neutral Jobs count
+﻿// MetricCards.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,11 +15,9 @@ import {
   Target,
   Award,
   BarChart3,
-  Globe,
-  AlertTriangle
+  Globe
 } from 'lucide-react';
 import { getDashboardStats, getKPIMetrics } from '@/services/analyticsService';
-import { getJobStatistics } from '@/services/jobService';
 import { systemHealth } from '@/data/analyticsData'; // Will be deprecated
 import { Skeleton } from '@/components/ui/skeleton';
 import { t } from '@/constants/translations';
@@ -290,14 +288,10 @@ export const EnhancedStatsCards = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const [dashboardResponse, jobStatsResponse] = await Promise.all([
-          getDashboardStats(),
-          getJobStatistics()
-        ]);
-        
+        const dashboardResponse = await getDashboardStats();
+
         const data = dashboardResponse.data.data;
-        const neutralJobsCount = jobStatsResponse.data?.data?.neutral || 0;
-        
+
         const formattedStats = [
           {
             title: t('dashboard.totalUsers'),
@@ -316,12 +310,6 @@ export const EnhancedStatsCards = () => {
             value: data.jobListings.toLocaleString(),
             icon: Briefcase,
             color: 'purple'
-          },
-          {
-            title: 'Job đang lỗi',
-            value: neutralJobsCount.toLocaleString(),
-            icon: AlertTriangle,
-            color: 'red'
           },
           {
             title: `Doanh thu tháng ${data.currentMonth || new Date().getMonth() + 1}`,
